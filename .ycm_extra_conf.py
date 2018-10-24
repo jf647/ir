@@ -1,0 +1,1 @@
+/home/nvr/work/misc/tools/bazel-compilation-database/bazel-compilation-database-0.2.3/.ycm_extra_conf.py

@@ -43,6 +43,9 @@ public:
   shared_ptr<Node<NodeType>> operator*() { return _node; }
   bool operator!=(NodeRange other) {
     if (_node) {
+      if (other._node) {
+        return _node->Value() != other._node->Value();
+      }
       return true;
     }
     return false;
@@ -61,7 +64,7 @@ public:
   Skiplist(int level, float density);
   virtual ~Skiplist();
   void Insert(NodeType k);
-  NodeRange<NodeType> Find(NodeType k);
+  NodeRange<NodeType> Find(NodeType k) const;
   template <class NT>
   friend ostream &operator<<(ostream &os, const Skiplist<NT> &sl);
 };
@@ -109,7 +112,7 @@ template <class NodeType> int Skiplist<NodeType>::next_level() {
   return l;
 }
 template <class NodeType>
-NodeRange<NodeType> Skiplist<NodeType>::Find(NodeType k) {
+NodeRange<NodeType> Skiplist<NodeType>::Find(NodeType k) const {
   auto current = root;
   for (int i = max_level; i >= 0; i--) {
     while (current->Right(i) && current->Right(i)->Value() < k) {

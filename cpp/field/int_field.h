@@ -4,6 +4,7 @@
 #include <string>
 #include <utility> // for other operators
 
+using std::ostream;
 using std::string;
 
 class IntField {
@@ -18,6 +19,7 @@ public:
       : _docId(docId), _fieldName(fieldName), _value(value){};
   bool operator<(IntField other) { return _value < other._value; }
   bool operator==(IntField other) { return _value == other._value; }
+  bool operator!=(IntField other) { return _value != other._value; }
   int doc() { return _docId; }
   string field_name() { return _fieldName; }
   virtual ~IntField(){};

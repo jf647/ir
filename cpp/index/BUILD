@@ -5,7 +5,9 @@ cc_library(
     deps = [
         "//cpp/ds:skiplist",
         "//cpp/field:int_field",
+        "//cpp/query:query",
     ],
+    visibility = ["//visibility:public"],
 )
 
 cc_test(

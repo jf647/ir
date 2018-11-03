@@ -24,8 +24,11 @@ public:
   void store(IntField field);
   NodeRange<IntField> Find(IntField cursor) const;
 };
-
-class Indexer {
+class IndexReader {
+public:
+  virtual shared_ptr<Index> get(string fieldName) const = 0;
+};
+class Indexer : public IndexReader {
 private:
   map<string, shared_ptr<Index>> _fieldMap;
 

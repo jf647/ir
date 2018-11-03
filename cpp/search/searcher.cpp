@@ -2,18 +2,10 @@
 #include <vector>
 using std::string;
 using std::vector;
-Searcher::Searcher(shared_ptr<Index> index) : _index(index) {}
+Searcher::Searcher(const IndexReader &reader) : ir(reader) {}
 
-vector<int> Searcher::query(IntRangeQuery q) {
-  NodeRange<IntField> startCursor = _index->Find(q.from());
-  NodeRange<IntField> endCursor = _index->Find(q.to());
-  vector<int> results;
-  auto current = startCursor.begin();
-  while (current != endCursor.begin()) {
-    auto v = *current;
-    results.push_back(v->Value().doc());
-    ++current;
-  }
-  return results;
+vector<int> Searcher::query(shared_ptr<Query> q) {
+  Executor e(*this);
+  return e.execute(q);
 }
 Searcher::~Searcher(){};

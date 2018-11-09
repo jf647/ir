@@ -1,6 +1,14 @@
 #ifndef QUERY_H
 #define QUERY_H
-#include "cpp/field/int_field.h"
+
+#include <memory>
+#include <string>
+#include <vector>
+
+using std::string;
+
+using std::shared_ptr;
+using std::vector;
 
 class QueryVisitor;
 class Query {
@@ -35,8 +43,8 @@ public:
       : _fieldName(fieldName), _from(from), _to(to) {}
   virtual ~IntRangeQuery(){};
   string fieldName() { return _fieldName; }
-  IntField from() { return IntField(_from); }
-  IntField to() { return IntField(_to); };
+  int from() { return _from; }
+  int to() { return _to; };
   void accept(QueryVisitor &visitor);
 
 private:
@@ -44,13 +52,28 @@ private:
   int _from;
   int _to;
 };
+class StringQuery : public Query {
+public:
+  StringQuery(string fieldName, string query)
+      : _fieldName(fieldName), _query(query) {}
+  virtual ~StringQuery(){};
+  string fieldName() { return _fieldName; }
+  string query() { return _query; }
+  void accept(QueryVisitor &visitor);
+
+private:
+  string _fieldName;
+  string _query;
+};
 class QueryVisitor {
 public:
   virtual void visit(IntRangeQuery *q) = 0;
   virtual void visit(NestedQuery *q) = 0;
+  virtual void visit(StringQuery *q) = 0;
 };
 
 void IntRangeQuery::accept(QueryVisitor &visitor) { visitor.visit(this); }
+void StringQuery::accept(QueryVisitor &visitor) { visitor.visit(this); }
 void NestedQuery::accept(QueryVisitor &visitor) { visitor.visit(this); }
 
 #endif /* QUERY_H */

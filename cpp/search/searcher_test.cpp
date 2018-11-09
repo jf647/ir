@@ -3,10 +3,12 @@
 #include "searcher.h"
 
 TEST(TestIntSearcher, RangedQuery) {
-  auto indexer = Indexer();
-  vector<IntField> fields;
+
+  IndexConfig config({make_shared<IntFieldConfig>("field1")});
+  auto indexer = Indexer(config);
+  vector<shared_ptr<Field>> fields;
   for (int i = 0; i < 100; ++i) {
-    fields.push_back(IntField(i, "field1", i));
+    fields.push_back(make_shared<IntField>(i, "field1", i));
   }
   indexer.index(fields);
   Searcher s1(indexer);
@@ -14,12 +16,15 @@ TEST(TestIntSearcher, RangedQuery) {
   auto res = s1.query(q);
   ASSERT_EQ(res.size(), 20);
 }
+
 TEST(TestIntSearcher, MultiQueryMust) {
-  auto indexer = Indexer();
-  vector<IntField> fields;
+  IndexConfig config({make_shared<IntFieldConfig>("field1"),
+                      make_shared<IntFieldConfig>("field2")});
+  auto indexer = Indexer(config);
+  vector<shared_ptr<Field>> fields;
   for (int i = 0; i < 100; ++i) {
-    fields.push_back(IntField(i, "field1", i));
-    fields.push_back(IntField(i, "field2", i % 10));
+    fields.push_back(make_shared<IntField>(i, "field1", i));
+    fields.push_back(make_shared<IntField>(i, "field2", i % 10));
   }
   indexer.index(fields);
   Searcher s1(indexer);
@@ -30,12 +35,15 @@ TEST(TestIntSearcher, MultiQueryMust) {
   auto res = s1.query(q);
   ASSERT_EQ(res.size(), 4);
 }
+
 TEST(TestIntSearcher, MultiQueryShould) {
-  auto indexer = Indexer();
-  vector<IntField> fields;
+  IndexConfig config({make_shared<IntFieldConfig>("field1"),
+                      make_shared<IntFieldConfig>("field2")});
+  auto indexer = Indexer(config);
+  vector<shared_ptr<Field>> fields;
   for (int i = 0; i < 100; ++i) {
-    fields.push_back(IntField(i, "field1", i));
-    fields.push_back(IntField(i, "field2", i * 10));
+    fields.push_back(make_shared<IntField>(i, "field1", i));
+    fields.push_back(make_shared<IntField>(i, "field2", i * 10));
   }
   indexer.index(fields);
   Searcher s1(indexer);
@@ -45,4 +53,18 @@ TEST(TestIntSearcher, MultiQueryShould) {
   auto q = make_shared<NestedQuery>(queries, SHOULD);
   auto res = s1.query(q);
   ASSERT_EQ(res.size(), 21);
+}
+TEST(TestStringSearcher, RangedQuery) {
+  IndexConfig config({make_shared<StringFieldConfig>("field2")});
+  auto indexer = Indexer(config);
+  vector<shared_ptr<Field>> fields;
+  for (int i = 0; i < 100; ++i) {
+    fields.push_back(
+        make_shared<StringField>(i, "field2", std::to_string(i % 10)));
+  }
+  indexer.index(fields);
+  Searcher s1(indexer);
+  auto q = make_shared<StringQuery>("field2", std::to_string(2));
+  auto res = s1.query(q);
+  ASSERT_EQ(res.size(), 10);
 }

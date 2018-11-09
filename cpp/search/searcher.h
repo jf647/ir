@@ -3,6 +3,7 @@
 
 #include "cpp/index/indexer.h"
 #include "cpp/query/query.h"
+using std::static_pointer_cast;
 
 class Searcher {
 private:
@@ -24,15 +25,24 @@ public:
     q->accept(*this);
     return docs;
   }
+  void visit(StringQuery *q) override {
+    auto _index = _enclose.ir.get(q->fieldName());
+    auto stringIndex = static_pointer_cast<StringIndex>(_index);
+    auto results = stringIndex->Find(q->query());
+    auto r = results.docs();
+    docs.insert(docs.end(), r.begin(), r.end());
+  }
   void visit(IntRangeQuery *q) override {
     auto _index = _enclose.ir.get(q->fieldName());
-    NodeRange<IntField> startCursor = _index->Find(q->from());
-    NodeRange<IntField> endCursor = _index->Find(q->to());
+    auto intIndex = static_pointer_cast<IntIndex>(_index);
+    NodeRange<IntField> startCursor = intIndex->Find(q->from());
+    NodeRange<IntField> endCursor = intIndex->Find(q->to());
     vector<int> results;
     auto current = startCursor.begin();
     while (current != endCursor.begin()) {
       auto v = *current;
-      results.push_back(v->Value().doc());
+      auto docs = v->Value().docs();
+      results.insert(results.end(), docs.begin(), docs.end());
       ++current;
     }
     std::copy(results.begin(), results.end(), std::back_inserter(docs));

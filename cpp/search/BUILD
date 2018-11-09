@@ -13,7 +13,7 @@ cc_test(
     copts = ["-Iexternal/gtest/include"],
     deps = [
         ":searcher",
-        "@gtest//:main",
+        "@gtest//:gtest_main",
     ],
 )
 

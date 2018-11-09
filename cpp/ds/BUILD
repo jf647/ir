@@ -11,7 +11,6 @@ cc_test(
     copts = ["-Iexternal/gtest/include"],
     deps = [
         ":skiplist",
-        "@backward//:stacker",
-        "@gtest//:main",
+        "@gtest//:gtest_main",
     ],
 )

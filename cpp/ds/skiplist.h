@@ -21,7 +21,8 @@ class Node : public std::enable_shared_from_this<Node<NodeType>> {
 public:
   Node(NodeType val, int level);
   shared_ptr<Node> Right(int level);
-  NodeType Value();
+  NodeType Value() const;
+  NodeType &ValueRef();
   void Make(vector<shared_ptr<Node<NodeType>>> trace);
 
 private:
@@ -85,7 +86,10 @@ void Node<NodeType>::Make(vector<shared_ptr<Node<NodeType>>> trace) {
     trace[i]->forward[i] = this->shared_from_this();
   }
 }
-template <class NodeType> NodeType Node<NodeType>::Value() { return value; }
+template <class NodeType> NodeType Node<NodeType>::Value() const {
+  return value;
+}
+template <class NodeType> NodeType &Node<NodeType>::ValueRef() { return value; }
 template <class NodeType>
 Skiplist<NodeType>::Skiplist(int level, float density)
     : root(make_shared<Node<NodeType>>(-1, level)), max_level(level),
@@ -100,9 +104,13 @@ template <class NodeType> void Skiplist<NodeType>::Insert(NodeType k) {
     }
     track[i] = current;
   }
-  auto nodeLevel = next_level();
-  auto node = make_shared<Node<NodeType>>(k, nodeLevel);
-  node->Make(track);
+  if (current->Right(0) && current->Right(0)->Value() == k) {
+    current->Right(0)->ValueRef() += k;
+  } else {
+    auto nodeLevel = next_level();
+    auto node = make_shared<Node<NodeType>>(k, nodeLevel);
+    node->Make(track);
+  }
 }
 template <class NodeType> int Skiplist<NodeType>::next_level() {
   int l = 0;

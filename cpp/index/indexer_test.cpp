@@ -22,3 +22,13 @@ TEST(TestIndexer, IndexSingleStringField) {
   }
   indexer.index(fields);
 }
+TEST(TestIndexer, IndexSingleScoredStringField) {
+  IndexConfig config(
+      {make_shared<StringFieldConfig>("field1", SNOWBALL, true)});
+  auto indexer = Indexer(config);
+  vector<shared_ptr<Field>> fields;
+  for (int i = 0; i < 100; ++i) {
+    fields.push_back(make_shared<StringField>(i, "field1", std::to_string(i)));
+  }
+  indexer.index(fields);
+}

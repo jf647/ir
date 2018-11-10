@@ -24,6 +24,8 @@ cc_library(
         ":doc_iterator",
         "//cpp/field:string_fields",
         "//cpp/analyzer:snowball_analyzer",
+        "@eigen",
+        "//cpp/ceigen:eigen_mask",
     ],
 )
 cc_library(

@@ -27,10 +27,16 @@ public:
   }
   void visit(StringQuery *q) override {
     auto _index = _enclose.ir.get(q->fieldName());
-    auto stringIndex = static_pointer_cast<StringIndex>(_index);
-    auto results = stringIndex->Find(q->query());
-    auto r = results.docs();
-    docs.insert(docs.end(), r.begin(), r.end());
+    if (q->scored) {
+      auto stringIndex = static_pointer_cast<ScoredStringIndex>(_index);
+      auto results = stringIndex->Find(q->query());
+      docs.insert(docs.end(), results.begin(), results.end());
+    } else {
+      auto stringIndex = static_pointer_cast<StringIndex>(_index);
+      auto results = stringIndex->Find(q->query());
+      auto r = results.docs();
+      docs.insert(docs.end(), r.begin(), r.end());
+    }
   }
   void visit(IntRangeQuery *q) override {
     auto _index = _enclose.ir.get(q->fieldName());

@@ -64,7 +64,7 @@ private:
 public:
   Skiplist(int level, float density);
   virtual ~Skiplist();
-  void Insert(NodeType k);
+  shared_ptr<Node<NodeType>> Insert(NodeType k);
   NodeRange<NodeType> Find(NodeType k) const;
   template <class NT>
   friend ostream &operator<<(ostream &os, const Skiplist<NT> &sl);
@@ -95,7 +95,8 @@ Skiplist<NodeType>::Skiplist(int level, float density)
     : root(make_shared<Node<NodeType>>(-1, level)), max_level(level),
       bernD(density) {}
 
-template <class NodeType> void Skiplist<NodeType>::Insert(NodeType k) {
+template <class NodeType>
+shared_ptr<Node<NodeType>> Skiplist<NodeType>::Insert(NodeType k) {
   auto current = root;
   vector<shared_ptr<Node<NodeType>>> track(max_level + 1);
   for (int i = max_level; i >= 0; i--) {
@@ -106,10 +107,12 @@ template <class NodeType> void Skiplist<NodeType>::Insert(NodeType k) {
   }
   if (current->Right(0) && current->Right(0)->Value() == k) {
     current->Right(0)->ValueRef() += k;
+    return current->Right(0);
   } else {
     auto nodeLevel = next_level();
     auto node = make_shared<Node<NodeType>>(k, nodeLevel);
     node->Make(track);
+    return node;
   }
 }
 template <class NodeType> int Skiplist<NodeType>::next_level() {

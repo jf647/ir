@@ -1,6 +1,9 @@
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "searcher.h"
+
+using testing::ElementsAre;
 
 TEST(TestIntSearcher, RangedQuery) {
 
@@ -67,4 +70,20 @@ TEST(TestStringSearcher, RangedQuery) {
   auto q = make_shared<StringQuery>("field2", std::to_string(2));
   auto res = s1.query(q);
   ASSERT_EQ(res.size(), 10);
+}
+TEST(TestScoredStringSearcher, Query) {
+  IndexConfig config(
+      {make_shared<StringFieldConfig>("field2", SNOWBALL, true)});
+  auto indexer = Indexer(config);
+  vector<shared_ptr<Field>> fields;
+  vector<vector<string>> s = {{"hello world"}, {"world not cool"}, {"cool"}};
+  for (int i = 0; i < s.size(); ++i) {
+    fields.push_back(make_shared<StringField>(i, "field2", s[i]));
+  }
+  indexer.index(fields);
+  Searcher s1(indexer);
+  auto q = make_shared<StringQuery>("field2", "cool world", true);
+  auto res = s1.query(q);
+  ASSERT_EQ(res.size(), 3);
+  ASSERT_THAT(res, ElementsAre(2, 1, 0));
 }

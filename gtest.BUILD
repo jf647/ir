@@ -14,18 +14,6 @@
 #
 package(default_visibility = ["//visibility:public"])
 
-licenses(["notice"])
-
-config_setting(
-    name = "windows",
-    values = {"cpu": "x64_windows"},
-)
-
-config_setting(
-    name = "windows_msvc",
-    values = {"cpu": "x64_windows_msvc"},
-)
-
 config_setting(
     name = "has_absl",
     values = {"define": "absl=1"},
@@ -53,13 +41,7 @@ cc_library(
         "googletest/include/gtest/*.h",
         "googlemock/include/gmock/*.h",
     ]),
-    copts = select(
-        {
-            ":windows": [],
-            ":windows_msvc": [],
-            "//conditions:default": ["-pthread"],
-        },
-    ),
+    copts =  ["-pthread"],
     defines = select(
         {
             ":has_absl": [
@@ -74,13 +56,9 @@ cc_library(
         "googletest",
         "googletest/include",
     ],
-    linkopts = select({
-        ":windows": [],
-        ":windows_msvc": [],
-        "//conditions:default": [
+    linkopts =  [
             "-pthread",
         ],
-    }),
     deps = select(
         {
             ":has_absl": [

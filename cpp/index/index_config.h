@@ -24,13 +24,19 @@ public:
 };
 class StringFieldConfig : public FieldConfig {
   AnalyzerType analyzer;
+  bool scored;
 
 public:
+  explicit StringFieldConfig(string fieldName, AnalyzerType analyzer,
+                             bool scored)
+      : FieldConfig(fieldName), analyzer(analyzer), scored(scored) {}
   explicit StringFieldConfig(string fieldName, AnalyzerType analyzer)
-      : FieldConfig(fieldName), analyzer(analyzer) {}
+      : StringFieldConfig(fieldName, analyzer, false) {}
   explicit StringFieldConfig(string fieldName)
-      : StringFieldConfig(fieldName, NONE) {}
+      : StringFieldConfig(fieldName, NONE, false) {}
   shared_ptr<Index> index() {
+    if (scored)
+      return make_shared<ScoredStringIndex>(fieldName(), analyzer);
     return make_shared<StringIndex>(fieldName(), analyzer);
   }
   ~StringFieldConfig() {}

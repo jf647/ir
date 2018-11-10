@@ -54,8 +54,11 @@ private:
 };
 class StringQuery : public Query {
 public:
+  bool scored;
+  StringQuery(string fieldName, string query, bool scored)
+      : scored(scored), _fieldName(fieldName), _query(query) {}
   StringQuery(string fieldName, string query)
-      : _fieldName(fieldName), _query(query) {}
+      : StringQuery(fieldName, query, false) {}
   virtual ~StringQuery(){};
   string fieldName() { return _fieldName; }
   string query() { return _query; }

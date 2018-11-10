@@ -15,17 +15,6 @@ using std::map;
 using std::shared_ptr;
 using std::vector;
 
-// class Index {
-// private:
-//  string _fieldName;
-//  Skiplist<IntField> _index;
-//
-// public:
-//  Index(string fieldName);
-//  string field_name();
-//  void store(IntField field);
-//  NodeRange<IntField> Find(IntField cursor) const;
-//};
 class IndexReader {
 public:
   virtual shared_ptr<Index> get(string fieldName) const = 0;

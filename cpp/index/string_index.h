@@ -115,15 +115,34 @@ class ScoredStringIndex : public Index {
   Eigen::SparseMatrix<double> terms;
   void store(string token, vector<int> docs) {
     auto id = vocab->fetch(token);
+    growIf(id, docs);
     for (auto doc : docs) {
       terms.coeffRef(doc, id)++;
+    }
+  }
+  void growIf(int tokenId, vector<int> docs) {
+    bool grow = false;
+    int newRows = terms.rows();
+    int newCols = terms.cols();
+
+    auto maxDocId = *(std::max_element(docs.begin(), docs.end()));
+    if (maxDocId >= terms.rows()) {
+      newRows *= 2;
+      grow = true;
+    }
+    if (tokenId >= terms.cols()) {
+      newCols *= 2;
+      grow = true;
+    }
+    if (grow) {
+      terms.conservativeResize(newRows, newCols);
     }
   }
 
 public:
   explicit ScoredStringIndex(string fieldName, AnalyzerType analyzer)
       : Index(fieldName), _analyzer(analyzer), vocab(make_shared<Vocabulary>()),
-        terms(100, 100) {}
+        terms(10, 10) {}
   void store(shared_ptr<Field> field) {
     auto iField = static_pointer_cast<StringField>(field);
     for (auto token : iField->tokens()) {

@@ -1,5 +1,13 @@
 package(default_visibility = ["//visibility:public"])
 cc_library(
+    name = "vector_field",
+    srcs = ["vector_field.cpp"],
+    hdrs = ["vector_field.h"],
+    deps = [
+        ":field_base",
+    ],
+)
+cc_library(
     name = "string_fields",
     srcs = ["string_fields.cpp"],
     hdrs = ["string_fields.h"],

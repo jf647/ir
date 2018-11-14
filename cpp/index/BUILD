@@ -3,6 +3,7 @@ cc_library(
     srcs = ["doc_iterator.cpp"],
     hdrs = ["doc_iterator.h"],
     deps = [
+        "//cpp/query:query",
     ],
 )
 cc_library(
@@ -29,12 +30,25 @@ cc_library(
     ],
 )
 cc_library(
+    name = "vector_index",
+    srcs = ["vector_index.cpp"],
+    hdrs = ["vector_index.h"],
+    deps = [
+        ":index",
+        "@eigen",
+        "//cpp/field:vector_field",
+        "//cpp/ceigen:eigen_mask",
+        "//cpp/index/ann:mrpt",
+    ],
+)
+cc_library(
     name = "index_config",
     hdrs = ["index_config.h"],
     srcs = ["index_config.cpp"],
     deps = [
         ":index",
         ":string_index",
+        ":vector_index",
     ],
 )
 cc_library(

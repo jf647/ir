@@ -28,6 +28,7 @@ public:
   void index(vector<shared_ptr<Field>> fields);
   shared_ptr<Index> get(string fieldName) const;
   virtual ~Indexer();
+  void refresh();
 };
 
 Indexer::Indexer(IndexConfig config) {
@@ -43,11 +44,17 @@ void Indexer::index(vector<shared_ptr<Field>> fields) {
       return;
       //_fieldMap[field.field_name()] = make_shared<Index>(field.field_name());
     }
-    _fieldMap[field->field_name()]->store(field);
+    auto index = _fieldMap[field->field_name()];
+    index->store(field);
   }
 }
 shared_ptr<Index> Indexer::get(string fieldName) const {
   return _fieldMap.find(fieldName)->second;
+}
+void Indexer::refresh() {
+  for (auto it = _fieldMap.begin(); it != _fieldMap.end(); ++it) {
+    it->second->refresh();
+  }
 }
 Indexer::~Indexer() {}
 

@@ -2,6 +2,7 @@
 #define INDEX_CONFIG_H
 #include "index.h"
 #include "string_index.h"
+#include "vector_index.h"
 #include <string>
 
 using std::shared_ptr;
@@ -41,7 +42,31 @@ public:
   }
   ~StringFieldConfig() {}
 };
+enum VectorInternal { NONE_IN, MRPT };
+class VectorFieldConfig : public FieldConfig {
+private:
+  int vecLength;
+  VectorInternal type;
+  int numTrees, depth;
+  float density;
 
+public:
+  explicit VectorFieldConfig(string fieldName, int vecLength, int numTrees,
+                             int depth, int density)
+      : FieldConfig(fieldName), vecLength(vecLength), type(MRPT),
+        numTrees(numTrees), depth(depth), density(density) {}
+  explicit VectorFieldConfig(string fieldName, int vecLength)
+      : FieldConfig(fieldName), vecLength(vecLength), type(NONE_IN) {}
+  shared_ptr<Index> index() {
+    switch (type) {
+    case MRPT:
+      return make_shared<ApproximateVectorIndex>(fieldName(), vecLength,
+                                                 numTrees, depth, density);
+    default:
+      return make_shared<VectorIndex>(fieldName(), vecLength);
+    }
+  }
+};
 class IndexConfig {
 private:
   vector<shared_ptr<FieldConfig>> _fieldConfigs;

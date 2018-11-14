@@ -15,6 +15,7 @@ public:
   Index(string fieldName);
   string field_name();
   virtual void store(shared_ptr<Field> field) = 0;
+  virtual void refresh() {}
 };
 
 class IntIndex : public Index {

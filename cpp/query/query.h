@@ -68,15 +68,32 @@ private:
   string _fieldName;
   string _query;
 };
+class VectorQuery : public Query {
+private:
+  string _fieldName;
+  vector<double> _vec;
+  int _k;
+
+public:
+  explicit VectorQuery(string fieldName, vector<double> _vec, int k)
+      : _fieldName(fieldName), _vec(_vec), _k(k) {}
+  virtual ~VectorQuery() {}
+  string fieldName() { return _fieldName; }
+  vector<double> query() { return _vec; }
+  int k() { return _k; };
+  void accept(QueryVisitor &visitor);
+};
 class QueryVisitor {
 public:
   virtual void visit(IntRangeQuery *q) = 0;
   virtual void visit(NestedQuery *q) = 0;
   virtual void visit(StringQuery *q) = 0;
+  virtual void visit(VectorQuery *q) = 0;
 };
 
 void IntRangeQuery::accept(QueryVisitor &visitor) { visitor.visit(this); }
 void StringQuery::accept(QueryVisitor &visitor) { visitor.visit(this); }
 void NestedQuery::accept(QueryVisitor &visitor) { visitor.visit(this); }
+void VectorQuery::accept(QueryVisitor &visitor) { visitor.visit(this); }
 
 #endif /* QUERY_H */

@@ -20,3 +20,11 @@ cc_library(
     srcs = ["field_base.cpp"],
     hdrs = ["field_base.h"],
 )
+cc_library(
+    name = "fields",
+    hdrs = ["fields.h"],
+    deps = [
+        ":string_fields",
+        ":vector_field",
+    ],
+)

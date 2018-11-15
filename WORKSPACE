@@ -1,6 +1,12 @@
 workspace(name = "org_nvr_nvrdb")
 
 http_archive(
+    name = "build_stack_rules_proto",
+    urls = ["https://github.com/stackb/rules_proto/archive/4c2226458203a9653ae722245cc27e8b07c383f7.tar.gz"],
+    sha256 = "0be90d609fcefae9cc5e404540b9b23176fb609c9d62f4f9f68528f66a6839bf",
+    strip_prefix = "rules_proto-4c2226458203a9653ae722245cc27e8b07c383f7",
+)
+http_archive(
      name = "com_google_absl",
      urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
      strip_prefix = "abseil-cpp-master",
@@ -18,3 +24,34 @@ new_http_archive(
     strip_prefix = "eigen-eigen-b3f3d4950030",
     url = "http://bitbucket.org/eigen/eigen/get/3.3.5.tar.gz",
 )
+new_http_archive(
+    name = "backward",
+    build_file = "backward.BUILD",
+    #sha256 = "b58cb7547a28b2c718d1e38aee18a3659c9e3ff52440297e965f5edffe34b6d0",
+    strip_prefix = "backward-cpp-84ae4f5e80381aca765a0810d4c811acae3cd7c7",
+    url = "https://github.com/bombela/backward-cpp/archive/84ae4f5e80381aca765a0810d4c811acae3cd7c7.tar.gz",
+)
+
+# For Debugging
+http_archive(
+    name = "co_vsco_bazel_toolchains",
+    strip_prefix = "bazel-toolchains-fa39ae4c19b11635b5e7031bed2c989e97e63912",
+    url = "https://github.com/vsco/bazel-toolchains/archive/fa39ae4c19b11635b5e7031bed2c989e97e63912.tar.gz",
+)
+load("@co_vsco_bazel_toolchains//toolchains:repositories.bzl", "bazel_toolchains_repositories")
+
+git_repository(
+    name = "com_github_nelhage_rules_boost",
+    commit = "a3d904133a56da3d07f9ae2f020e95c66f0129dd",
+    remote = "https://github.com/vvarma/rules_boost.git",
+)
+load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
+
+
+bazel_toolchains_repositories()
+
+load("@build_stack_rules_proto//cpp:deps.bzl", "cpp_grpc_library")
+cpp_grpc_library()
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
+grpc_deps()
+boost_deps()

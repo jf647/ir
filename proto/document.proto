@@ -1,0 +1,31 @@
+syntax = "proto3";
+package document;
+
+message Document {
+  string id = 1;
+  repeated Field fields = 2;
+}
+message Field {
+  string field_name = 1;
+  oneof type {
+    TextField text_field = 2;
+    IntegerField integer_field = 3;
+    DoubleField double_field = 4;
+  }
+}
+message TextField { repeated string values = 1; }
+message IntegerField { repeated int64 values = 1; }
+message DoubleField { repeated double values = 1; }
+
+service DocumentService {
+  rpc Put(IndexRequest) returns(IndexResponse) {}
+  rpc Get(GetDocumentRequest) returns(GetDocumentResponse) {}
+}
+
+message IndexRequest { Document document = 1; }
+message IndexResponse { string response_code = 1; }
+message GetDocumentRequest { string id = 1; }
+message GetDocumentResponse {
+  string response_code = 1;
+  Document document = 2;
+}

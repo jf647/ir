@@ -4,6 +4,7 @@ cc_library(
     hdrs = ["doc_iterator.h"],
     deps = [
         "//cpp/query:query",
+        "@boost//:iterator",
     ],
 )
 cc_library(
@@ -11,9 +12,17 @@ cc_library(
     hdrs = ["index.h"],
     srcs = ["index.cpp"],
     deps = [
-        "//cpp/ds:skiplist",
         "//cpp/field:field_base",
         "//cpp/query:query",
+    ],
+)
+cc_library(
+    name = "int_index",
+    hdrs = ["int_index.h"],
+    deps = [
+        ":index",
+        "//cpp/ds:skiplist",
+        ":doc_iterator",
     ],
 )
 cc_library(
@@ -27,6 +36,7 @@ cc_library(
         "//cpp/analyzer:snowball_analyzer",
         "@eigen",
         "//cpp/ceigen:eigen_mask",
+        "//cpp/ds:skiplist",
     ],
 )
 cc_library(
@@ -49,6 +59,7 @@ cc_library(
         ":index",
         ":string_index",
         ":vector_index",
+        ":int_index",
     ],
 )
 cc_library(
@@ -72,5 +83,6 @@ cc_test(
     deps = [
         ":indexer",
         "@gtest//:gtest_main",
+        "@backward//:stacker",
     ],
 )

@@ -3,13 +3,14 @@
 #include "indexer.h"
 
 using std::cout;
-
+using std::to_string;
+using testing::FLAGS_gtest_catch_exceptions;
 TEST(TestIndexer, IndexSingleIntField) {
   IndexConfig config({make_shared<IntFieldConfig>("field1")});
   auto indexer = Indexer(config);
   vector<shared_ptr<Field>> fields;
   for (int i = 0; i < 100; ++i) {
-    fields.push_back(make_shared<IntField>(i, "field1", i));
+    fields.push_back(make_shared<IntField>(to_string(i), "field1", i));
   }
   indexer.index(fields);
 }
@@ -18,7 +19,8 @@ TEST(TestIndexer, IndexSingleStringField) {
   auto indexer = Indexer(config);
   vector<shared_ptr<Field>> fields;
   for (int i = 0; i < 100; ++i) {
-    fields.push_back(make_shared<StringField>(i, "field1", std::to_string(i)));
+    fields.push_back(
+        make_shared<StringField>(to_string(i), "field1", to_string(i)));
   }
   indexer.index(fields);
 }
@@ -28,7 +30,8 @@ TEST(TestStringAnalyzedIndexer, IndexSingleScoredStringField) {
   auto indexer = Indexer(config);
   vector<shared_ptr<Field>> fields;
   for (int i = 0; i < 100; ++i) {
-    fields.push_back(make_shared<StringField>(i, "field1", std::to_string(i)));
+    fields.push_back(
+        make_shared<StringField>(to_string(i), "field1", to_string(i)));
   }
   indexer.index(fields);
 }
@@ -39,7 +42,7 @@ TEST(TestVectorIndexer, IndexSingleVectorField) {
   for (int i = 0; i < 100; ++i) {
     auto d = (double)i;
     vector<double> f = {d, d * 2, d * 3};
-    fields.push_back(make_shared<VectorField>(i, "field1", f));
+    fields.push_back(make_shared<VectorField>(to_string(i), "field1", f));
   }
   indexer.index(fields);
 }
@@ -50,7 +53,7 @@ TEST(TestApproximateVectorIndexer, IndexSingleVectorField) {
   for (int i = 0; i < 100; ++i) {
     auto d = (double)i;
     vector<double> f = {d, d * 2, d * 3};
-    fields.push_back(make_shared<VectorField>(i, "field1", f));
+    fields.push_back(make_shared<VectorField>(to_string(i), "field1", f));
   }
   indexer.index(fields);
   indexer.refresh();

@@ -12,7 +12,7 @@ private:
 
 public:
   Searcher(const IndexReader &reader);
-  vector<int> query(shared_ptr<Query> range);
+  vector<string> query(shared_ptr<Query> range);
   virtual ~Searcher();
 };
 class Searcher::Executor : public QueryVisitor {
@@ -24,17 +24,16 @@ public:
       : _enclose(enclose), collector(collector) {}
   explicit Executor(const Searcher &enclose)
       : Executor(enclose, DocCollector(MUST)) {}
-  vector<int> execute(shared_ptr<Query> q) {
+  vector<string> execute(shared_ptr<Query> q) {
     query(q);
-    return collector.elligible();
+    return collector.scoredResults();
   }
   void query(shared_ptr<Query> q) { q->accept(*this); }
   void visit(StringQuery *q) override {
     auto _index = _enclose.ir.get(q->fieldName());
     if (q->scored) {
       auto stringIndex = static_pointer_cast<ScoredStringIndex>(_index);
-      auto results = stringIndex->Find(q->query());
-      collector.collect(results);
+      stringIndex->Find(collector, q->query());
     } else {
       auto stringIndex = static_pointer_cast<StringIndex>(_index);
       auto results = stringIndex->Find(q->query());
@@ -45,17 +44,7 @@ public:
   void visit(IntRangeQuery *q) override {
     auto _index = _enclose.ir.get(q->fieldName());
     auto intIndex = static_pointer_cast<IntIndex>(_index);
-    NodeRange<IntField> startCursor = intIndex->Find(q->from());
-    NodeRange<IntField> endCursor = intIndex->Find(q->to());
-    vector<int> results;
-    auto current = startCursor.begin();
-    while (current != endCursor.begin()) {
-      auto v = *current;
-      auto docs = v->Value().docs();
-      results.insert(results.end(), docs.begin(), docs.end());
-      ++current;
-    }
-    collector.collect(results);
+    intIndex->Find(collector, q->from(), q->to());
   }
   void visit(VectorQuery *q) override {
     auto _index = _enclose.ir.get(q->fieldName());
@@ -78,7 +67,7 @@ public:
       e.query(query);
       c = e.collector;
     }
-    collector.collect(c.elligible());
+    collector.collect(c);
   }
 };
 

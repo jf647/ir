@@ -3,6 +3,7 @@
 
 #include "searcher.h"
 
+using std::to_string;
 using testing::ElementsAre;
 
 TEST(TestIntSearcher, RangedQuery) {
@@ -11,7 +12,7 @@ TEST(TestIntSearcher, RangedQuery) {
   auto indexer = Indexer(config);
   vector<shared_ptr<Field>> fields;
   for (int i = 0; i < 100; ++i) {
-    fields.push_back(make_shared<IntField>(i, "field1", i));
+    fields.push_back(make_shared<IntField>(to_string(i), "field1", i));
   }
   indexer.index(fields);
   Searcher s1(indexer);
@@ -26,8 +27,8 @@ TEST(TestIntSearcher, MultiQueryMust) {
   auto indexer = Indexer(config);
   vector<shared_ptr<Field>> fields;
   for (int i = 0; i < 100; ++i) {
-    fields.push_back(make_shared<IntField>(i, "field1", i));
-    fields.push_back(make_shared<IntField>(i, "field2", i % 10));
+    fields.push_back(make_shared<IntField>(to_string(i), "field1", i));
+    fields.push_back(make_shared<IntField>(to_string(i), "field2", i % 10));
   }
   indexer.index(fields);
   Searcher s1(indexer);
@@ -45,8 +46,8 @@ TEST(TestIntSearcher, MultiQueryShould) {
   auto indexer = Indexer(config);
   vector<shared_ptr<Field>> fields;
   for (int i = 0; i < 100; ++i) {
-    fields.push_back(make_shared<IntField>(i, "field1", i));
-    fields.push_back(make_shared<IntField>(i, "field2", i * 10));
+    fields.push_back(make_shared<IntField>(to_string(i), "field1", i));
+    fields.push_back(make_shared<IntField>(to_string(i), "field2", i * 10));
   }
   indexer.index(fields);
   Searcher s1(indexer);
@@ -62,8 +63,8 @@ TEST(TestStringSearcher, RangedQuery) {
   auto indexer = Indexer(config);
   vector<shared_ptr<Field>> fields;
   for (int i = 0; i < 100; ++i) {
-    fields.push_back(
-        make_shared<StringField>(i, "field2", std::to_string(i % 10)));
+    fields.push_back(make_shared<StringField>(to_string(i), "field2",
+                                              std::to_string(i % 10)));
   }
   indexer.index(fields);
   Searcher s1(indexer);
@@ -78,14 +79,14 @@ TEST(TestScoredStringSearcher, Query) {
   vector<shared_ptr<Field>> fields;
   vector<vector<string>> s = {{"hello world"}, {"world not cool"}, {"cool"}};
   for (int i = 0; i < s.size(); ++i) {
-    fields.push_back(make_shared<StringField>(i, "field2", s[i]));
+    fields.push_back(make_shared<StringField>(to_string(i), "field2", s[i]));
   }
   indexer.index(fields);
   Searcher s1(indexer);
   auto q = make_shared<StringQuery>("field2", "cool world", true);
   auto res = s1.query(q);
   ASSERT_EQ(res.size(), 3);
-  ASSERT_THAT(res, ElementsAre(2, 1, 0));
+  ASSERT_THAT(res, ElementsAre("2", "1", "0"));
 }
 TEST(TestVectorSearcher, Query) {
   IndexConfig config({make_shared<VectorFieldConfig>("field1", 3)});
@@ -97,7 +98,7 @@ TEST(TestVectorSearcher, Query) {
                               {1.0, 1.0, 1.0},
                               {-1.0, -1.0, -1.0}};
   for (int i = 0; i < s.size(); ++i) {
-    fields.push_back(make_shared<VectorField>(i, "field1", s[i]));
+    fields.push_back(make_shared<VectorField>(to_string(i), "field1", s[i]));
   }
   indexer.index(fields);
   Searcher s1(indexer);
@@ -105,7 +106,7 @@ TEST(TestVectorSearcher, Query) {
   auto q = make_shared<VectorQuery>("field1", query, 10);
   auto res = s1.query(q);
   ASSERT_EQ(res.size(), 5);
-  ASSERT_THAT(res, ElementsAre(1, 3, 0, 2, 4));
+  ASSERT_THAT(res, ElementsAre("1", "3", "0", "2", "4"));
 }
 
 TEST(TestVectorSearcher, MultiQueryFiltered) {
@@ -119,8 +120,8 @@ TEST(TestVectorSearcher, MultiQueryFiltered) {
                               {1.0, 1.0, 1.0},
                               {-1.0, -1.0, -1.0}};
   for (int i = 0; i < s.size(); i++) {
-    fields.push_back(make_shared<IntField>(i, "field1", i));
-    fields.push_back(make_shared<VectorField>(i, "field2", s[i]));
+    fields.push_back(make_shared<IntField>(to_string(i), "field1", i));
+    fields.push_back(make_shared<VectorField>(to_string(i), "field2", s[i]));
   }
   indexer.index(fields);
   Searcher s1(indexer);
@@ -131,7 +132,7 @@ TEST(TestVectorSearcher, MultiQueryFiltered) {
   auto q = make_shared<NestedQuery>(queries, MUST);
   auto res = s1.query(q);
   ASSERT_EQ(res.size(), 3);
-  ASSERT_THAT(res, ElementsAre(3, 2, 4));
+  ASSERT_THAT(res, ElementsAre("3", "2", "4"));
 }
 TEST(TestApproximateVectorSearcher, Query) {
   IndexConfig config({make_shared<VectorFieldConfig>("field1", 3, 10, 1, 1)});
@@ -143,7 +144,7 @@ TEST(TestApproximateVectorSearcher, Query) {
                               {1.0, 1.0, 1.0},
                               {-1.0, -1.0, -1.0}};
   for (int i = 0; i < s.size(); ++i) {
-    fields.push_back(make_shared<VectorField>(i, "field1", s[i]));
+    fields.push_back(make_shared<VectorField>(to_string(i), "field1", s[i]));
   }
   indexer.index(fields);
   indexer.refresh();
@@ -152,5 +153,5 @@ TEST(TestApproximateVectorSearcher, Query) {
   auto q = make_shared<VectorQuery>("field1", query, 5);
   auto res = s1.query(q);
   ASSERT_EQ(res.size(), 5);
-  ASSERT_THAT(res, ElementsAre(1, 3, 0, 2, 4));
+  ASSERT_THAT(res, ElementsAre("1", "3", "0", "2", "4"));
 }

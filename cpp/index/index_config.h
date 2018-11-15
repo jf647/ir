@@ -1,6 +1,7 @@
 #ifndef INDEX_CONFIG_H
 #define INDEX_CONFIG_H
 #include "index.h"
+#include "int_index.h"
 #include "string_index.h"
 #include "vector_index.h"
 #include <string>

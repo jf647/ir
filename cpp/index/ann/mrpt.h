@@ -180,8 +180,12 @@ public:
         }
       }
     }
+    elected = elected.block(0, 0, n_elected, elected.cols());
+    vector<int> results(elected.size());
+    VectorXi::Map(&results[0], elected.size(), RowMajor) = elected;
 
-    return exact_knn(q, k, elected, n_elected);
+    return results;
+    // return exact_knn(q, k, elected, n_elected);
   }
 
   /**

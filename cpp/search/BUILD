@@ -14,6 +14,7 @@ cc_test(
     deps = [
         ":searcher",
         "@gtest//:gtest_main",
+        #"@backward//:stacker",
     ],
 )
 

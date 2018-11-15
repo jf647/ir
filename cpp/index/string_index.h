@@ -1,24 +1,35 @@
 #ifndef STRING_INDEX_H
 #define STRING_INDEX_H
+#include "Eigen/Sparse"
+#include <atomic>
 #include <cmath>
+#include <string>
 
+#include "cpp/analyzer/snowball_analyzer.h"
+#include "cpp/ceigen/eigen_mask.h"
+#include "cpp/ds/skiplist.h"
 #include "cpp/field/string_fields.h"
+
 #include "doc_iterator.h"
 #include "index.h"
 
-#include "Eigen/Sparse"
-#include "cpp/ceigen/eigen_mask.h"
+using Eigen::Dynamic;
+using Eigen::Matrix;
+using Eigen::SparseMatrix;
+using Eigen::SparseVector;
 
+using std::atomic_int;
 using std::sort;
+using std::string;
 
 class Token : public DocWrapper {
 private:
   string _value;
 
 public:
-  explicit Token(string value, vector<int> docs)
+  explicit Token(string value, vector<string> docs)
       : DocWrapper(docs), _value(value) {}
-  Token(int value) : Token("", {-1}) {}
+  Token(int value) : Token("", {""}) {}
   Token(string value) : Token(value, {}) {}
   virtual ~Token() override {}
   virtual bool operator<(Token other) { return _value < other._value; }
@@ -47,11 +58,11 @@ void StringIndex::store(shared_ptr<Field> field) {
     case SNOWBALL: {
       SnowballAnalyzer a;
       for (auto t : a.tokens(token))
-        store(Token(t, iField->docs()));
+        store(Token(t, {iField->doc()}));
       break;
     }
     case NONE:
-      store(Token(token, iField->docs()));
+      store(Token(token, {iField->doc()}));
     }
   }
 }
@@ -112,53 +123,52 @@ public:
 class ScoredStringIndex : public Index {
   AnalyzerType _analyzer;
   shared_ptr<Vocabulary> vocab;
-  Eigen::SparseMatrix<double> terms;
-  void store(string token, vector<int> docs) {
+  SparseMatrix<double> terms;
+  vector<string> docIds;
+  atomic_int currDoc;
+
+  void store(string token, int docId) {
     auto id = vocab->fetch(token);
-    growIf(id, docs);
-    for (auto doc : docs) {
-      terms.coeffRef(doc, id)++;
+    growCols(id);
+    terms.coeffRef(docId, id)++;
+  }
+  void growRows() {
+    if (currDoc == terms.rows()) {
+      int newRows = terms.rows() * 2;
+      terms.conservativeResize(newRows, terms.cols());
+      docIds.resize(newRows);
     }
   }
-  void growIf(int tokenId, vector<int> docs) {
-    bool grow = false;
-    int newRows = terms.rows();
-    int newCols = terms.cols();
-
-    auto maxDocId = *(std::max_element(docs.begin(), docs.end()));
-    if (maxDocId >= terms.rows()) {
-      newRows *= 2;
-      grow = true;
-    }
+  void growCols(int tokenId) {
     if (tokenId >= terms.cols()) {
-      newCols *= 2;
-      grow = true;
-    }
-    if (grow) {
-      terms.conservativeResize(newRows, newCols);
+      int newCols = terms.cols() * 2;
+      terms.conservativeResize(terms.rows(), newCols);
     }
   }
 
 public:
   explicit ScoredStringIndex(string fieldName, AnalyzerType analyzer)
       : Index(fieldName), _analyzer(analyzer), vocab(make_shared<Vocabulary>()),
-        terms(10, 10) {}
+        terms(10, 10), docIds(10), currDoc(0) {}
   void store(shared_ptr<Field> field) {
+    growRows();
+    auto docId = currDoc.fetch_add(1);
+    docIds[docId] = field->doc();
     auto iField = static_pointer_cast<StringField>(field);
     for (auto token : iField->tokens()) {
       switch (_analyzer) {
       case SNOWBALL: {
         SnowballAnalyzer a;
         for (auto t : a.tokens(token))
-          store(t, iField->docs());
+          store(t, docId);
         break;
       }
       case NONE:
-        store(token, iField->docs());
+        store(token, docId);
       }
     }
   }
-  vector<int> Find(string query) const {
+  void Find(DocCollector &collector, string query) const {
     vector<string> tokens;
     switch (_analyzer) {
     case SNOWBALL: {
@@ -169,50 +179,47 @@ public:
     case NONE:
       tokens = {query};
     }
-    Eigen::Matrix<bool, 1, Eigen::Dynamic> m(1, terms.rows());
+    Matrix<bool, 1, Dynamic> m(1, terms.rows());
     for (auto token : tokens) {
       auto id = vocab->fetchOrElse(token, -1);
       if (id != -1)
         m.coeffRef(0, id) = true;
     }
-    Eigen::SparseVector<double> docTermCount(terms.cols());
-    Eigen::SparseVector<double> docFreq(terms.rows());
+    SparseVector<double> docTermCount(terms.cols());
+    SparseVector<double> docFreq(terms.rows());
     for (int k = 0; k < terms.outerSize(); ++k)
-      for (Eigen::SparseMatrix<double>::InnerIterator it(terms, k); it; ++it) {
+      for (SparseMatrix<double>::InnerIterator it(terms, k); it; ++it) {
         if (it.value() > 0)
           docFreq.coeffRef(it.col(), 0) += 1;
         docTermCount.coeffRef(it.row(), 0) += 1;
       }
     double numDocs = terms.rows();
-    for (Eigen::SparseVector<double>::InnerIterator it(docFreq); it; ++it) {
+    for (SparseVector<double>::InnerIterator it(docFreq); it; ++it) {
       it.valueRef() = log10(1 + numDocs / it.value());
     }
 
-    Eigen::SparseMatrix<double> res = mask(terms, m);
+    SparseMatrix<double> res = mask(terms, m);
     for (int k = 0; k < res.outerSize(); ++k)
-      for (Eigen::SparseMatrix<double>::InnerIterator it(res, k); it; ++it) {
+      for (SparseMatrix<double>::InnerIterator it(res, k); it; ++it) {
         auto scaler =
             docFreq.coeff(it.col(), 0) / docTermCount.coeff(it.row(), 0);
         it.valueRef() *= scaler;
       }
 
-    Eigen::SparseVector<double> scores(numDocs);
+    SparseVector<double> scores(numDocs);
     for (int k = 0; k < res.outerSize(); ++k)
-      for (Eigen::SparseMatrix<double>::InnerIterator it(res, k); it; ++it) {
+      for (SparseMatrix<double>::InnerIterator it(res, k); it; ++it) {
         scores.coeffRef(it.row(), 0) += it.value();
       }
-    vector<int> docs(scores.nonZeros());
+    vector<string> docs(scores.nonZeros());
     vector<double> scoresVec(scores.nonZeros());
     int i = 0;
-    for (Eigen::SparseVector<double>::InnerIterator it(scores); it; ++it) {
-      docs[i] = it.row();
+    for (SparseVector<double>::InnerIterator it(scores); it; ++it) {
+      docs[i] = docIds[it.row()];
       scoresVec[i] = it.value();
       ++i;
     }
-
-    sort(docs.begin(), docs.end(),
-         [&scoresVec](int i, int j) { return scoresVec[i] > scoresVec[j]; });
-    return docs;
+    collector.collect(docs, scoresVec);
   }
 };
 

@@ -1,0 +1,31 @@
+{
+  "document": {
+    "id": "doc1",
+    "fields": [
+      {
+        "field_name": "field1",
+        "text_field": {
+          "values": [
+            "hello world"
+          ]
+        }
+      },
+      {
+        "field_name": "field2",
+        "text_field": {
+          "values": [
+            "sample"
+          ]
+        }
+      },
+      {
+        "field_name": "field3",
+        "integer_field": {
+          "values": [
+            42
+          ]
+        }
+      }
+    ]
+  }
+}

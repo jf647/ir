@@ -15,6 +15,8 @@ using std::map;
 using std::shared_ptr;
 using std::vector;
 
+using namespace indexer;
+
 class IndexReader {
 public:
   virtual shared_ptr<Index> get(string fieldName) const = 0;

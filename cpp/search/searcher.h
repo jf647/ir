@@ -3,7 +3,10 @@
 
 #include "cpp/index/indexer.h"
 #include "cpp/query/query.h"
+#include <vector>
 using std::static_pointer_cast;
+using std::string;
+using std::vector;
 
 class Searcher {
 private:
@@ -70,5 +73,12 @@ public:
     collector.collect(c);
   }
 };
+Searcher::Searcher(const IndexReader &reader) : ir(reader) {}
+
+vector<string> Searcher::query(shared_ptr<Query> q) {
+  Executor e(*this);
+  return e.execute(q);
+}
+Searcher::~Searcher(){};
 
 #endif /* SEARCHER_H */

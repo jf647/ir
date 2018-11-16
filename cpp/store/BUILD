@@ -1,18 +1,17 @@
 package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "config",
-    srcs = ["config.cpp"],
     hdrs = ["config.h"],
     deps = [
     ],
 )
 cc_library(
     name = "file_store",
-    srcs = ["file_store.cpp"],
     hdrs = ["file_store.h"],
     deps = [
         ":config",
         ":doc_wrapper",
+        "//cpp/index:indexer",
     ],
 )
 cc_library(
@@ -20,7 +19,7 @@ cc_library(
     srcs = ["doc_wrapper.cpp"],
     hdrs = ["doc_wrapper.h"],
     deps = [
-        "//proto:document_service_cpp",
+        "//proto:document_models_cpp",
         "//cpp/field:fields",
     ],
 )

@@ -8,7 +8,7 @@
 
 using std::shared_ptr;
 using std::string;
-
+namespace indexer {
 class FieldConfig {
   string _fieldName;
 
@@ -78,5 +78,7 @@ public:
   vector<shared_ptr<FieldConfig>> fields() { return _fieldConfigs; }
   virtual ~IndexConfig(){};
 };
+
+} // namespace indexer
 
 #endif /* INDEX_CONFIG_H */

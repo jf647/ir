@@ -1,0 +1,14 @@
+{
+  "index_name": "sample1",
+  "count": 5,
+  "params": {
+    "params": [
+      {
+        "filter_param": {
+          "field": "field2",
+          "string_filter": "sample"
+        }
+      }
+    ]
+  }
+}

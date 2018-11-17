@@ -25,8 +25,10 @@ public:
   }
   shared_ptr<Indexer> Get(string indexName) const {
     auto it = indices.find(indexName);
-    if (it == indices.end())
+    if (it == indices.end()) {
+      cout << "did not find index" << indexName << endl;
       return shared_ptr<Indexer>();
+    }
     return it->second;
   }
 };

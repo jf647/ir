@@ -48,7 +48,8 @@ vector<shared_ptr<Field>> DocWrapper::fields() {
       for (int j = 0; j < tf.values_size(); j++) {
         values.push_back(tf.values(j));
       }
-      fs[i] = make_shared<StringField>(doc.id(), field.field_name(), values);
+      fs.push_back(
+          make_shared<StringField>(doc.id(), field.field_name(), values));
     } else if (field.has_integer_field()) {
       auto intf = field.integer_field();
       vector<int> values(intf.values_size());

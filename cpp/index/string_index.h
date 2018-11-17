@@ -74,6 +74,7 @@ DocWrapper StringIndex::Find(string query) const {
     tokens = a.tokens(query);
     break;
   }
+  default:
   case NONE:
     tokens = {query};
   }
@@ -81,8 +82,10 @@ DocWrapper StringIndex::Find(string query) const {
   for (auto token : tokens) {
     NodeRange<Token> wrappers = _index.Find(token);
     auto current = *wrappers;
-    Token t = current->Value();
-    d += t;
+    if (current) {
+      Token t = current->Value();
+      d += t;
+    }
   }
   return d;
 }

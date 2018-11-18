@@ -21,7 +21,7 @@ public:
     auto ir = manager->Get(request->index_name());
     Searcher s(*ir);
     QueryWrapper qw(*request);
-    s.query(qw.query());
+    auto results = s.query(qw.query());
 
     return Status::OK;
   }

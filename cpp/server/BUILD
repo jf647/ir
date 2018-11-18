@@ -39,5 +39,7 @@ cc_binary(
         ":document_service",
         ":admin_service",
         ":search_service",
+        "//cpp/utils:init_logger",
+        "//cpp/utils:stacktrace",
     ],
 )

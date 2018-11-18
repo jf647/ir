@@ -1,1 +1,0 @@
-/Users/varma/work/bazel/github.com/nvrdb/bazel-compilation-database/.ycm_extra_conf.py

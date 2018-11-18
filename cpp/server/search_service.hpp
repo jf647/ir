@@ -19,9 +19,19 @@ public:
                      const search::SearchRequest *request,
                      search::SearchResponse *response) override {
     auto ir = manager->Get(request->index_name());
-    Searcher s(*ir);
+    if (!ir) {
+      return Status(grpc::NOT_FOUND, "index not dound");
+    }
+    auto indexReader = *ir;
+    Searcher s(indexReader);
     QueryWrapper qw(*request);
-    auto results = s.query(qw.query());
+    auto query = qw.query();
+    if (!query)
+      return Status(grpc::INTERNAL, "query is null");
+
+    for (string res : s.query(query)) {
+      cout << res << endl;
+    }
 
     return Status::OK;
   }

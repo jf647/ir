@@ -39,21 +39,18 @@ bool exists(string filename) {
 }
 
 void FileStore::store(store::DocWrapper dw) {
-  string s;
-  dw.doc.SerializeToString(&s);
-  cout << s << endl;
   auto fn = filename(base_dir, dw.id());
-  cout << "Storing file:" << fn << endl;
   if (exists(fn))
     return;
   ofstream file;
   file.open(fn);
   dw.to_stream(&file);
   file.close();
-  cout << "Stored file:" << fn << endl;
   for (auto in : indexers) {
+    if (!in) {
+      continue;
+    }
     in->index(dw.fields());
-    cout << "Indexed file:" << fn << endl;
   }
 }
 

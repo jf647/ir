@@ -37,9 +37,6 @@ Status DocumentServiceImpl::Put(ServerContext *context,
                                 const IndexRequest *request,
                                 IndexResponse *response) {
   Document d = request->document();
-  string s;
-  d.SerializeToString(&s);
-  cout << s << endl;
   store->store(d);
   std::string prefix("Put ");
   response->set_response_code(prefix + d.id());

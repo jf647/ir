@@ -1,1 +1,1 @@
-bazel-compilation-database-0.2.3/.ycm_extra_conf.py
+/Users/varma/work/bazel/github.com/nvrdb/bazel-compilation-database/.ycm_extra_conf.py

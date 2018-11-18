@@ -62,11 +62,15 @@ public:
       c = DocCollector(SHOULD);
       break;
     case MUST:
+    default:
       c = DocCollector(MUST);
       break;
     }
     for (shared_ptr<Query> query : q->queries()) {
       Executor e(_enclose, c);
+      if (!query) {
+        continue;
+      }
       e.query(query);
       c = e.collector;
     }

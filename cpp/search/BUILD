@@ -15,6 +15,7 @@ cc_library(
     deps = [
         "//cpp/index:indexer",
         "//cpp/query:query",
+        "//cpp/utils:logger",
     ],
     visibility = ["//visibility:public"],
 )

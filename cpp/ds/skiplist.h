@@ -75,8 +75,9 @@ Node<NodeType>::Node(NodeType val, int level)
     : value(val), forward(level + 1) {}
 template <class NodeType>
 shared_ptr<Node<NodeType>> Node<NodeType>::Right(int level) {
-  if (forward.size() <= level)
+  if (forward.size() <= level) {
     return shared_ptr<Node<NodeType>>();
+  }
   return forward[level];
 }
 template <class NodeType>
@@ -130,7 +131,9 @@ NodeRange<NodeType> Skiplist<NodeType>::Find(NodeType k) const {
       current = current->Right(i);
     }
   }
-  return NodeRange<NodeType>(current->Right(0));
+  if (current->Right(0))
+    return NodeRange<NodeType>(current->Right(0));
+  return NodeRange<NodeType>(current);
 }
 template <class NodeType> Skiplist<NodeType>::~Skiplist() {}
 template <class NodeType>

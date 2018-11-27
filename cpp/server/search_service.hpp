@@ -2,7 +2,7 @@
 #define SEARCH_SERVICE_H
 #include "cpp/search/query_wrapper.h"
 #include "cpp/search/searcher.h"
-#include "index_manager.hpp"
+#include "index_manager.h"
 #include "proto/search/search.grpc.pb.h"
 #include "proto/search/search.pb.h"
 #include <memory>
@@ -30,7 +30,8 @@ public:
       return Status(grpc::INTERNAL, "query is null");
 
     for (string res : s.query(query)) {
-      cout << res << endl;
+      auto hit = response->add_hits();
+      hit->set_id(res);
     }
 
     return Status::OK;

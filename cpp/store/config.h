@@ -10,7 +10,7 @@ private:
 public:
   Config() {}
   virtual ~Config() {}
-  string base_dir() { return "/tmp"; }
+  string base_dir() { return "/tmp/nvrdb/data"; }
 };
 
 #endif /* CONFIG_H */

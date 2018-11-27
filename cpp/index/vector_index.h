@@ -92,6 +92,7 @@ public:
   }
   virtual void sortBy(DocCollector &collector, vector<double> query, int k) = 0;
 };
+
 class ApproximateVectorIndex : public BaseVectorIndex {
 
 private:
@@ -149,7 +150,7 @@ class VectorIndex : public BaseVectorIndex {
 private:
 public:
   VectorIndex(string fieldName, int vecLength)
-      : BaseVectorIndex(fieldName, vecLength){};
+      : BaseVectorIndex(fieldName, vecLength) {}
   void sortBy(DocCollector &collector, vector<double> query, int k) override {
     VectorXd v = VectorXd::Map(query.data(), _docs.cols());
     MatrixXd m = v.asDiagonal();

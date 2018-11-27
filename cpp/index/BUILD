@@ -37,6 +37,7 @@ cc_library(
         "@eigen",
         "//cpp/ceigen:eigen_mask",
         "//cpp/ds:skiplist",
+        "//cpp/utils:logger",
     ],
 )
 cc_library(

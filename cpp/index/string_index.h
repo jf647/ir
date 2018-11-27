@@ -9,6 +9,7 @@
 #include "cpp/ceigen/eigen_mask.h"
 #include "cpp/ds/skiplist.h"
 #include "cpp/field/string_fields.h"
+#include "cpp/utils/logger.hpp"
 
 #include "doc_iterator.h"
 #include "index.h"
@@ -170,9 +171,13 @@ public:
         store(token, docId);
       }
     }
+    BOOST_LOG_TRIVIAL(info)
+        << "Indexed Doc Id:" << docIds[docId] << " idx: " << docId
+        << " tot tokens: " << terms.cols();
   }
   void Find(DocCollector &collector, string query) const {
     vector<string> tokens;
+    double numDocs = terms.rows();
     switch (_analyzer) {
     case SNOWBALL: {
       SnowballAnalyzer a;
@@ -182,38 +187,46 @@ public:
     case NONE:
       tokens = {query};
     }
-    Matrix<bool, 1, Dynamic> m(1, terms.rows());
+    Matrix<bool, 1, Dynamic> m(1, terms.cols());
+    m.setZero();
     for (auto token : tokens) {
       auto id = vocab->fetchOrElse(token, -1);
       if (id != -1)
         m.coeffRef(0, id) = true;
+      else
+        BOOST_LOG_TRIVIAL(info) << "token not found " << token;
     }
+    BOOST_LOG_TRIVIAL(info) << "mask " << m.rows() << ":" << m.cols()
+                            << " num toks " << tokens.size();
+    // BOOST_LOG_TRIVIAL(info) << m;
     SparseVector<double> docTermCount(terms.cols());
-    SparseVector<double> docFreq(terms.rows());
+    SparseVector<double> docFreq(numDocs);
     for (int k = 0; k < terms.outerSize(); ++k)
       for (SparseMatrix<double>::InnerIterator it(terms, k); it; ++it) {
         if (it.value() > 0)
-          docFreq.coeffRef(it.col(), 0) += 1;
-        docTermCount.coeffRef(it.row(), 0) += 1;
+          docFreq.coeffRef(it.row()) += 1;
+        docTermCount.coeffRef(it.col()) += 1;
       }
-    double numDocs = terms.rows();
     for (SparseVector<double>::InnerIterator it(docFreq); it; ++it) {
       it.valueRef() = log10(1 + numDocs / it.value());
     }
+    BOOST_LOG_TRIVIAL(info) << "docTermFreq";
 
     SparseMatrix<double> res = mask(terms, m);
+    BOOST_LOG_TRIVIAL(info) << "masked nzs: " << res.nonZeros();
     for (int k = 0; k < res.outerSize(); ++k)
       for (SparseMatrix<double>::InnerIterator it(res, k); it; ++it) {
-        auto scaler =
-            docFreq.coeff(it.col(), 0) / docTermCount.coeff(it.row(), 0);
+        auto scaler = docFreq.coeff(it.row()) / docTermCount.coeff(it.col());
         it.valueRef() *= scaler;
       }
+    BOOST_LOG_TRIVIAL(info) << "scaled";
 
     SparseVector<double> scores(numDocs);
     for (int k = 0; k < res.outerSize(); ++k)
       for (SparseMatrix<double>::InnerIterator it(res, k); it; ++it) {
-        scores.coeffRef(it.row(), 0) += it.value();
+        scores.coeffRef(it.row()) += it.value();
       }
+    BOOST_LOG_TRIVIAL(info) << "scored";
     vector<string> docs(scores.nonZeros());
     vector<double> scoresVec(scores.nonZeros());
     int i = 0;

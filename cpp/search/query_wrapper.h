@@ -16,7 +16,8 @@ private:
       if (q.has_query_param()) {
         auto qp = q.query_param();
         for (int j = 0; j < qp.fields_size(); j++)
-          qs.push_back(make_shared<StringQuery>(qp.fields(j), qp.query()));
+          qs.push_back(
+              make_shared<StringQuery>(qp.fields(j), qp.query(), true));
       } else if (q.has_filter_param()) {
         auto fp = q.filter_param();
         qs.push_back(make_shared<StringQuery>(fp.field(), fp.string_filter()));

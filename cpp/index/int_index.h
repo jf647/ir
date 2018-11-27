@@ -37,6 +37,7 @@ void IntIndex::Find(DocCollector &collector, IntField from, IntField to) const {
   auto end = _index.Find(Token(to.value()));
   vector<string> res;
   auto current = begin.begin();
+  ++end;
   while (current != end.begin()) {
     auto t = (*current)->Value().docs();
     res.insert(res.end(), t.begin(), t.end());

@@ -18,7 +18,7 @@ TEST(TestIntSearcher, RangedQuery) {
   Searcher s1(indexer);
   auto q = make_shared<IntRangeQuery>("field1", 20, 40);
   auto res = s1.query(q);
-  ASSERT_EQ(res.size(), 20);
+  ASSERT_EQ(res.size(), 21);
 }
 
 TEST(TestIntSearcher, MultiQueryMust) {
@@ -37,7 +37,7 @@ TEST(TestIntSearcher, MultiQueryMust) {
   queries.push_back(make_shared<IntRangeQuery>("field2", 2, 4));
   auto q = make_shared<NestedQuery>(queries, MUST);
   auto res = s1.query(q);
-  ASSERT_EQ(res.size(), 4);
+  ASSERT_EQ(res.size(), 6);
 }
 
 TEST(TestIntSearcher, MultiQueryShould) {
@@ -56,7 +56,7 @@ TEST(TestIntSearcher, MultiQueryShould) {
   queries.push_back(make_shared<IntRangeQuery>("field2", 390, 410));
   auto q = make_shared<NestedQuery>(queries, SHOULD);
   auto res = s1.query(q);
-  ASSERT_EQ(res.size(), 21);
+  ASSERT_EQ(res.size(), 22);
 }
 TEST(TestStringSearcher, RangedQuery) {
   IndexConfig config({make_shared<StringFieldConfig>("field2")});
@@ -86,7 +86,7 @@ TEST(TestScoredStringSearcher, Query) {
   auto q = make_shared<StringQuery>("field2", "cool world", true);
   auto res = s1.query(q);
   ASSERT_EQ(res.size(), 3);
-  ASSERT_THAT(res, ElementsAre("2", "1", "0"));
+  ASSERT_THAT(res, ElementsAre("1", "2", "0"));
 }
 TEST(TestVectorSearcher, Query) {
   IndexConfig config({make_shared<VectorFieldConfig>("field1", 3)});

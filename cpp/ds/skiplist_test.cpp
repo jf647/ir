@@ -25,3 +25,15 @@ TEST(SkiplistTest, TestCreateAndInsert) {
     sl.Insert(i * 2);
   }
 }
+
+TEST(SkiplistTest, TestFindEmpty) {
+  auto sl = Skiplist<int>(5, 0.5);
+  auto res = sl.Find(5);
+  ASSERT_NE(*res, nullptr);
+  for (int i = 0; i < 5; i++) {
+    auto right = (*res)->Right(i);
+    ASSERT_EQ(right, nullptr);
+  }
+  auto right = (*res)->Right(5);
+  ASSERT_EQ(right, nullptr);
+}

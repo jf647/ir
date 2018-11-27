@@ -7,7 +7,7 @@
 
 void server_signal_handler(int signum) {
   ::signal(signum, SIG_DFL);
-  boost::stacktrace::safe_dump_to("./backtrace.dump");
+  boost::stacktrace::safe_dump_to(0, 10, "./backtrace.dump");
   ::raise(SIGABRT);
 }
 

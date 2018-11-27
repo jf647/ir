@@ -12,6 +12,7 @@ cc_library(
         ":config",
         ":doc_wrapper",
         "//cpp/index:indexer",
+        "//cpp/utils:logger",
     ],
 )
 cc_library(

@@ -1,6 +1,7 @@
 #ifndef FILE_STORE_H
 #define FILE_STORE_H
 #include "config.h"
+#include "cpp/utils/logger.hpp"
 #include "doc_wrapper.h"
 
 #include <fstream>
@@ -28,10 +29,7 @@ FileStore::FileStore(Config c) : base_dir(c.base_dir()) {}
 
 FileStore::~FileStore() {}
 
-string filename(string base_dir, string id) {
-  cout << base_dir << "id" << id << endl;
-  return base_dir + "/" + id;
-}
+string filename(string base_dir, string id) { return base_dir + "/" + id; }
 
 bool exists(string filename) {
   struct stat buffer;
@@ -48,10 +46,13 @@ void FileStore::store(store::DocWrapper dw) {
   file.close();
   for (auto in : indexers) {
     if (!in) {
+      BOOST_LOG_TRIVIAL(info) << "Not an indexer";
       continue;
     }
     in->index(dw.fields());
   }
+  BOOST_LOG_TRIVIAL(info) << "Stored file " << fn
+                          << " indexed in indexers: " << indexers.size();
 }
 
 store::DocWrapper FileStore::fetch(string id) {

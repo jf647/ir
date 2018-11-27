@@ -5,7 +5,8 @@
 #include <grpc++/grpc++.h>
 
 #include "cpp/index/indexer.h"
-#include "index_manager.hpp"
+#include "cpp/utils/logger.hpp"
+#include "index_manager.h"
 namespace admin {
 
 using grpc::Server;
@@ -27,6 +28,11 @@ Status AdminServiceImpl::CreateIndex(ServerContext *context,
                                      const CreateIndexRequest *request,
                                      CreateIndexResponse *response) {
   auto schema = request->index_schema();
+  auto index = indexManager->Get(schema.index_name());
+  if (index) {
+    BOOST_LOG_TRIVIAL(info) << "Index already exists: " << schema.index_name();
+    return Status::OK;
+  }
   vector<shared_ptr<indexer::FieldConfig>> fieldConfigs;
   fieldConfigs.reserve(schema.field_configs_size());
   for (int i = 0; i < schema.field_configs_size(); ++i) {
@@ -57,6 +63,7 @@ Status AdminServiceImpl::CreateIndex(ServerContext *context,
   IndexConfig indexConfig(fieldConfigs);
   indexManager->Register(schema.index_name(),
                          make_shared<Indexer>(indexConfig));
+  BOOST_LOG_TRIVIAL(info) << "Index created: " << schema.index_name();
   return Status::OK;
 }
 } // namespace admin

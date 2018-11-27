@@ -45,11 +45,20 @@ git_repository(
     commit = "2733bb5dddc0b62e794bb761a19e1bf67352bd7e",
     remote = "https://github.com/nelhage/rules_boost.git",
 )
+http_archive(
+    name = "io_bazel_rules_python",
+    sha256 = "40499c0a9d55f0c5deb245ed24733da805f05aaf6085cb39027ba486faf1d2e1",
+    strip_prefix = "rules_python-8b5d0683a7d878b28fffe464779c8a53659fc645",
+    url = "https://github.com/bazelbuild/rules_python/archive/8b5d0683a7d878b28fffe464779c8a53659fc645.zip",
+)
+
 
 load("@build_stack_rules_proto//cpp:deps.bzl", "cpp_proto_compile")
 cpp_proto_compile()
 load("@build_stack_rules_proto//cpp:deps.bzl", "cpp_grpc_compile")
 cpp_grpc_compile()
+load("@build_stack_rules_proto//python:deps.bzl", "python_grpc_library")
+python_grpc_library()
 load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 grpc_deps()
 
@@ -60,3 +69,25 @@ bazel_toolchains_repositories()
 load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 boost_deps()
 
+load("@io_bazel_rules_python//python:pip.bzl", "pip_import", "pip_repositories")
+pip_repositories()
+pip_import(
+	name = "protobuf_py_deps",
+	requirements = "@build_stack_rules_proto//python/requirements:protobuf.txt",
+)
+
+load("@protobuf_py_deps//:requirements.bzl", protobuf_pip_install = "pip_install")
+protobuf_pip_install()
+pip_import(
+   name = "grpc_py_deps",
+   requirements = "@build_stack_rules_proto//python:requirements.txt",
+)
+load("@grpc_py_deps//:requirements.bzl", grpc_pip_install = "pip_install")
+grpc_pip_install()
+
+pip_import(
+    name = "demo_deps",
+    requirements = "//python:requirements.txt",
+)
+load("@demo_deps//:requirements.bzl", demo_deps_install = "pip_install")
+demo_deps_install()

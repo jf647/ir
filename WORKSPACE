@@ -52,6 +52,27 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_python/archive/8b5d0683a7d878b28fffe464779c8a53659fc645.zip",
 )
 
+new_http_archive(
+    name = "mio",
+    build_file = "mio.BUILD",
+    strip_prefix = "mio-c7c7163a82457d71ecb80e5e3d831dd808117483",
+    url = "https://github.com/mandreyel/mio/archive/c7c7163a82457d71ecb80e5e3d831dd808117483.tar.gz",
+)
+# dependency missing in flatbuffers
+http_archive(
+    name = "io_bazel_rules_go",
+    urls = ["https://github.com/bazelbuild/rules_go/releases/download/0.16.2/rules_go-0.16.2.tar.gz"],
+    sha256 = "f87fa87475ea107b3c69196f39c82b7bbf58fe27c62a338684c20ca17d1d8613",
+)
+http_archive(
+    name = "flatbuffers",
+    urls = ["https://github.com/google/flatbuffers/archive/49fed8c4f61f296d1d173a1a8df872a094020278.tar.gz"],
+    strip_prefix = "flatbuffers-49fed8c4f61f296d1d173a1a8df872a094020278",
+)
+
+load("@io_bazel_rules_go//go:def.bzl", "go_rules_dependencies", "go_register_toolchains")
+go_rules_dependencies()
+go_register_toolchains()
 
 load("@build_stack_rules_proto//cpp:deps.bzl", "cpp_proto_compile")
 cpp_proto_compile()

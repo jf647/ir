@@ -1,0 +1,30 @@
+namespace nvrdb;
+table Header {
+    name:string;
+    version:int;
+    count:long;
+    buffered_count:long;
+    list_start:long;
+    list_end:long;
+    buffer_start:long;
+    buffer_end:long;
+}
+
+union Key {
+    StringKey, IntKey    
+}
+
+table IndexNode {
+    key:Key;
+    docs:[string];
+}
+
+table StringKey {
+    token:string;
+}
+
+table IntKey{
+    token:int;    
+}
+file_identifier "NPSL";
+

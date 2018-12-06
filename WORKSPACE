@@ -15,24 +15,24 @@ http_archive(
     urls = ["https://github.com/abseil/abseil-cpp/archive/master.zip"],
 )
 
-new_http_archive(
+http_archive(
     name = "gtest",
-    build_file = "gtest.BUILD",
+    build_file = "@//:gtest.BUILD",
     sha256 = "f3ed3b58511efd272eb074a3a6d6fb79d7c2e6a0e374323d1e6bcbcc1ef141bf",
     strip_prefix = "googletest-release-1.8.0",
-    url = "https://github.com/google/googletest/archive/release-1.8.0.zip",
+    urls = ["https://github.com/google/googletest/archive/release-1.8.0.zip"],
 )
 
-new_http_archive(
+http_archive(
     name = "eigen",
-    build_file = "eigen.BUILD",
+    build_file = "@//:eigen.BUILD",
     strip_prefix = "eigen-eigen-b3f3d4950030",
-    url = "http://bitbucket.org/eigen/eigen/get/3.3.5.tar.gz",
+    urls = ["http://bitbucket.org/eigen/eigen/get/3.3.5.tar.gz"],
 )
 
-new_http_archive(
+http_archive(
     name = "backward",
-    build_file = "backward.BUILD",
+    build_file = "@//:backward.BUILD",
     #sha256 = "b58cb7547a28b2c718d1e38aee18a3659c9e3ff52440297e965f5edffe34b6d0",
     strip_prefix = "backward-cpp-84ae4f5e80381aca765a0810d4c811acae3cd7c7",
     url = "https://github.com/bombela/backward-cpp/archive/84ae4f5e80381aca765a0810d4c811acae3cd7c7.tar.gz",
@@ -58,11 +58,11 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_python/archive/8b5d0683a7d878b28fffe464779c8a53659fc645.zip",
 )
 
-new_http_archive(
+http_archive(
     name = "mio",
-    build_file = "mio.BUILD",
+    build_file = "@//:mio.BUILD",
     strip_prefix = "mio-c7c7163a82457d71ecb80e5e3d831dd808117483",
-    url = "https://github.com/mandreyel/mio/archive/c7c7163a82457d71ecb80e5e3d831dd808117483.tar.gz",
+    urls = ["https://github.com/mandreyel/mio/archive/c7c7163a82457d71ecb80e5e3d831dd808117483.tar.gz"],
 )
 
 # dependency missing in flatbuffers

@@ -47,23 +47,3 @@ mio::mmap_sink load_header(std::string filename) {
   }
   return rw_map;
 }
-
-void add_to_buffer(std::string filename, const Token &token) {
-  flatbuffers::FlatBufferBuilder builder(1024);
-  auto k = builder.CreateString(token.key());
-  auto sk = CreateStringKey(builder, k);
-  auto docs = builder.CreateVectorOfStrings(token.value());
-  IndexNodeBuilder inb(builder);
-  inb.add_key_type(Key_StringKey);
-  inb.add_key(sk.Union());
-  inb.add_docs(docs);
-  auto inbOffset = inb.Finish();
-  builder.Finish(inbOffset);
-  auto bufSize = builder.GetSize();
-  std::error_code error;
-  std::ofstream fp;
-  fp.open(filename, std::ios::ate | std::ios::binary);
-  fp.write((char *)&bufSize, sizeof(bufSize));
-  fp.write((char *)builder.GetBufferPointer(), bufSize);
-  fp.flush();
-}

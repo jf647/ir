@@ -5,34 +5,39 @@ cc_library(
     deps = [
     ],
 )
+
 cc_library(
     name = "persistent_sl",
     srcs = ["persistent_sl.cpp"],
     hdrs = ["persistent_sl.h"],
     deps = [
         ":sl",
-        "@mio//:mio",
-        "//flatb:persistent_sl_gen_fbs",
         "//cpp/utils:logger",
-        ":psl_string",
+        "//flatb:persistent_sl_gen_fbs",
+        "@mio",
     ],
 )
+
 cc_library(
     name = "psl_string",
     srcs = ["psl_string.cpp"],
     hdrs = ["psl_string.h"],
     deps = [
+        ":persistent_sl",
     ],
 )
+
 cc_test(
     name = "persistent_sl_test",
     srcs = ["persistent_sl_test.cpp"],
     copts = ["-Iexternal/gtest/include"],
     deps = [
-        ":persistent_sl",
+        ":psl_string",
+        "@backward//:stacker",
         "@gtest//:gtest_main",
     ],
 )
+
 cc_test(
     name = "sl_test",
     srcs = ["sl_test.cpp"],
@@ -42,6 +47,7 @@ cc_test(
         "@gtest//:gtest_main",
     ],
 )
+
 cc_library(
     name = "skiplist",
     srcs = ["skiplist.cpp"],

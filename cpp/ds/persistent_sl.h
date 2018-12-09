@@ -2,6 +2,7 @@
 #define PERSISTENT_SL_H
 #include "flatb/persistent_sl_generated.h"
 #include "sl.h"
+#include <iostream>
 #include <mio/mmap.hpp>
 
 using namespace nvrdb;
@@ -29,9 +30,9 @@ public:
 template <typename NodeType>
 class PersistentSkipList : SkipList<PersistentNode<NodeType>> {
 private:
-  mio::mmap_sink rw_map;
-  const Header *header;
+  mio::ummap_sink rw_map;
   std::string _filename;
+  const Header *header;
 
 public:
   typedef typename NodeType::key_type key_type;
@@ -42,7 +43,7 @@ public:
   const value_type &operator[](const key_type &rhs);
 };
 
-mio::mmap_sink load_header(std::string filename);
+mio::ummap_sink load_header(std::string filename);
 
 template <typename NodeType>
 PersistentNode<NodeType> convert(const IndexNode *in, int offset);
@@ -50,11 +51,11 @@ PersistentNode<NodeType> convert(const IndexNode *in, int offset);
 template <typename NodeType>
 PersistentSkipList<NodeType>::PersistentSkipList(std::string filename)
     : SkipList<PersistentNode<NodeType>>(10, 0.5),
-      rw_map(load_header(filename)),
-      header(flatbuffers::GetRoot<Header>(rw_map.data())), _filename(filename) {
+      header(flatbuffers::GetRoot<Header>(rw_map.data())),
+      rw_map(load_header(filename)), _filename(filename) {
   if (header->count() > 0) {
     std::error_code error;
-    auto ro_map = mio::make_mmap_source(filename, header->list_start(),
+    auto ro_map = mio::make_mmap_source(_filename, header->list_start(),
                                         header->list_end(), error);
     if (error) {
     }

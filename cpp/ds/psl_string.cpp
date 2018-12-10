@@ -16,9 +16,11 @@ Token &Token::operator+=(const Token &rhs) {
 }
 
 PersistentNode<Token> convert_token(const IndexNode *in, int offset) {
-  return PersistentNode<Token>(in->key_as_StringKey()->token()->str(), offset);
+  return PersistentNode<Token>(in->key_as_StringKey()->token()->str(),
+                               {offset});
 }
-void add_to_buffer(std::string filename, const Token &token) {
+void append_token_to_buffer(std::string filename, const Token &token,
+                            int &offset, int &size) {
   flatbuffers::FlatBufferBuilder builder(1024);
   auto k = builder.CreateString(token.key());
   auto sk = CreateStringKey(builder, k);
@@ -28,12 +30,13 @@ void add_to_buffer(std::string filename, const Token &token) {
   inb.add_key(sk.Union());
   inb.add_docs(docs);
   auto inbOffset = inb.Finish();
-  builder.Finish(inbOffset);
-  auto bufSize = builder.GetSize();
+  builder.FinishSizePrefixed(inbOffset);
+  size = builder.GetSize();
   std::error_code error;
   std::ofstream fp;
-  fp.open(filename, std::ios::ate | std::ios::binary);
-  fp.write((char *)&bufSize, sizeof(bufSize));
-  fp.write((char *)builder.GetBufferPointer(), bufSize);
+  fp.open(filename, std::ios::app | std::ios::binary);
+  offset = fp.tellp();
+  fp.write((char *)builder.GetBufferPointer(), size);
   fp.flush();
+  fp.close();
 }

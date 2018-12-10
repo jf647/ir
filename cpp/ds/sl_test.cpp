@@ -1,7 +1,9 @@
 #include "sl.h"
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <string>
 
+using testing::ElementsAre;
 class Token {
 public:
   typedef std::string key_type;
@@ -25,4 +27,15 @@ private:
   value_type _value;
 };
 
-TEST(TestSL, TestHappy) { auto sl = SkipList<Token>(5, 0.5); }
+TEST(TestSL, TestHappy) {
+  auto sl = SkipList<Token>(5, 0.5);
+
+  for (int i = 0; i < 10; i++) {
+    sl += Token(std::to_string(i + 1), {"hello" + std::to_string(i)});
+  }
+  for (int i = 0; i < 10; i++) {
+    auto docs = sl[std::to_string(i)];
+    ASSERT_EQ(docs.size(), 1);
+    ASSERT_THAT(docs, ElementsAre("hello" + std::to_string(i)));
+  }
+}

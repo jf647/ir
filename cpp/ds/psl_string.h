@@ -24,8 +24,12 @@ template <> PersistentNode<Token> convert(const IndexNode *in, int offset) {
   return convert_token(in, offset);
 }
 
-void add_to_buffer(std::string filename, const Token &token);
-template <> void PersistentSkipList<Token>::operator+=(const Token &rhs) {
-  add_to_buffer(_filename, rhs);
+void append_token_to_buffer(std::string filename, const Token &token,
+                            int &offset, int &size);
+template <>
+void add_to_buffer(std::string filename, const Token &token, int &offset,
+                   int &size) {
+  append_token_to_buffer(filename, token, offset, size);
 }
+
 #endif /* PSL_STRING_H */

@@ -1,6 +1,7 @@
 #ifndef SL_H
 #define SL_H
 
+#include <iostream>
 #include <memory>
 #include <random>
 
@@ -18,7 +19,7 @@ public:
   void make(std::vector<node_ptr> trace);
   node_ptr right(int level);
   typename NodeType::key_type key() const;
-  const typename NodeType::value_type &value() const;
+  typename NodeType::value_type value() const;
   NodeType &ref();
   bool operator==(const Node<NodeType> &rhs);
 };
@@ -30,10 +31,11 @@ template <typename NodeType>
 Node<NodeType>::Node(const NodeType &rhs, int level)
     : node(rhs), forward(level) {}
 template <typename NodeType> Node<NodeType>::~Node() {}
+
 template <typename NodeType>
 void Node<NodeType>::make(std::vector<Node<NodeType>::node_ptr> trace) {
   auto max = std::min(trace.size(), forward.size());
-  for (auto i = 0; i < max; ++i) {
+  for (auto i = 0; i < max; i++) {
     forward[i] = trace[i]->right(i);
     trace[i]->forward[i] = this->shared_from_this();
   }
@@ -50,7 +52,7 @@ typename NodeType::key_type Node<NodeType>::key() const {
   return node.key();
 }
 template <typename NodeType>
-const typename NodeType::value_type &Node<NodeType>::value() const {
+typename NodeType::value_type Node<NodeType>::value() const {
   return node.value();
 }
 template <typename NodeType> NodeType &Node<NodeType>::ref() { return node; }
@@ -68,7 +70,7 @@ public:
   SkipList(int max_level, float density);
   virtual ~SkipList();
   virtual void operator+=(const NodeType &rhs);
-  const value_type &operator[](const key_type &rhs);
+  value_type operator[](const key_type &rhs);
 
 private:
   const node_ptr root;
@@ -102,7 +104,12 @@ void SkipList<NodeType>::operator+=(const NodeType &rhs) {
     return;
   }
   int nodeLevel = next_level();
-  auto node = std::make_shared<Node<NodeType>>(rhs, nodeLevel);
+  // std::cout << "insert key:" << rhs.key() << " level: " << nodeLevel << " --
+  // "; for (auto t : trace)
+  //  std::cout << ":" << t->key();
+  // std::cout << std::endl;
+
+  auto node = std::make_shared<Node<NodeType>>(rhs, nodeLevel + 1);
   node->make(trace);
 }
 template <typename NodeType> int SkipList<NodeType>::next_level() {
@@ -113,11 +120,14 @@ template <typename NodeType> int SkipList<NodeType>::next_level() {
   return l;
 }
 template <typename NodeType>
-const typename SkipList<NodeType>::value_type &SkipList<NodeType>::
+typename SkipList<NodeType>::value_type SkipList<NodeType>::
 operator[](const typename SkipList<NodeType>::key_type &rhs) {
-  node_ptr current = const_cast<node_ptr>(root);
+  const static typename NodeType::value_type zero_value =
+      NodeType::Zero().value();
+  node_ptr current = std::const_pointer_cast<Node<NodeType>>(root);
   for (int i = max_level; i >= 0; i--) {
-    while (current->right(i) != Node<NodeType>::zero_p &&
+
+    while (current->right(i) && current->right(i) != Node<NodeType>::zero_p &&
            current->right(i)->key() < rhs) {
       current = current->right(i);
     }
@@ -125,7 +135,7 @@ operator[](const typename SkipList<NodeType>::key_type &rhs) {
   if (current->right(0) != Node<NodeType>::zero_p &&
       current->right(0)->key() == rhs)
     return current->right(0)->value();
-  return NodeType::Zero().value();
+  return zero_value;
 }
 
 template <typename NodeType> SkipList<NodeType>::~SkipList() {}

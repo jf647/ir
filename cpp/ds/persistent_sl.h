@@ -41,11 +41,14 @@ private:
 public:
   typedef typename NodeType::key_type key_type;
   typedef typename NodeType::value_type value_type;
+  const static NodeType zero;
+
   PersistentSkipList(std::string filename);
   virtual ~PersistentSkipList();
+
   void operator+=(const NodeType &rhs);
   value_type operator[](const key_type &rhs);
-  const static NodeType zero;
+  void refresh();
 };
 
 template <typename NodeType>
@@ -75,7 +78,7 @@ PersistentSkipList<NodeType>::PersistentSkipList(std::string filename)
     }
   }
   if (header->buffered_count() > 0) {
-    auto current = header->list_start();
+    auto current = header->buffer_start();
     auto data = rw_map.data() + header->buffer_start();
     while (current < header->buffer_end()) {
       auto in = flatbuffers::GetSizePrefixedRoot<IndexNode>(data);
@@ -98,11 +101,27 @@ void PersistentSkipList<NodeType>::operator+=(const NodeType &rhs) {
   auto nBufferedCount = header->buffered_count() + 1;
   header->mutate_buffered_count(nBufferedCount);
   header->mutate_buffer_end(header->buffer_end() + size);
-  PersistentNode<NodeType> pn(rhs.key(), {offset});
-  SkipList<PersistentNode<NodeType>>::operator+=(pn);
   std::error_code error;
   rw_map.sync(error);
   if (error) {
+  }
+}
+template <typename NodeType> void PersistentSkipList<NodeType>::refresh() {
+  auto bend = header->buffer_end();
+  auto tMap = mio::ummap_sink(_filename);
+  rw_map.swap(tMap);
+  if (header->buffered_count() > 0) {
+    auto current = header->buffer_start();
+    auto data = rw_map.data() + header->buffer_start();
+    while (current < bend) {
+      auto in = flatbuffers::GetSizePrefixedRoot<IndexNode>(data);
+      auto pn = convert<NodeType>(in, current);
+      SkipList<PersistentNode<NodeType>>::operator+=(pn);
+      auto nodeSize = flatbuffers::GetPrefixedSize(data);
+      current += nodeSize + sizeof(nodeSize);
+      data += nodeSize + sizeof(nodeSize);
+    }
+    std::cout << "updated skiplist" << std::endl;
   }
 }
 template <typename NodeType>
@@ -114,21 +133,15 @@ operator[](const PersistentSkipList<NodeType>::key_type &rhs) {
       PersistentNode<NodeType>::Zero().value();
   auto in = SkipList<PersistentNode<NodeType>>::operator[](rhs);
   if (in == pers_zero_value) {
-    std::cout << "none" << std::endl;
     return zero_value;
   }
   std::vector<std::string> docs;
   for (int offset : in) {
-    std::cout << "off" << offset << "mmap" << rw_map.mapped_length()
-              << std::endl;
     auto node =
         flatbuffers::GetSizePrefixedRoot<IndexNode>(rw_map.data() + offset);
     auto d = node->docs();
-    std::cout << "s" << d->size() << std::endl;
-    // std::cout << node->key_as_StringKey()->token()->str() << std::endl;
     for (int i = 0; i < d->size(); i++) {
       auto s = d->GetAsString(i)->str();
-      std::cout << "v" << s << std::endl;
       docs.push_back(s);
     }
   }
@@ -136,6 +149,8 @@ operator[](const PersistentSkipList<NodeType>::key_type &rhs) {
 }
 
 template <typename NodeType>
-PersistentSkipList<NodeType>::~PersistentSkipList() {}
+PersistentSkipList<NodeType>::~PersistentSkipList() {
+  rw_map.unmap();
+}
 
 #endif /* PERSISTENT_SL_H */

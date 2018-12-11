@@ -5,19 +5,32 @@
 #include <stdio.h>
 using testing::ElementsAre;
 
-void check_headers(std::string filename) {
+typedef std::function<void(const Header *)> header_checks;
+
+void check_headers(std::string filename,
+                   std::initializer_list<header_checks> checks) {
   auto hmap = load_header(filename);
   auto header = flatbuffers::GetRoot<Header>(hmap.data());
   ASSERT_EQ(header->name()->str(), "persisted");
   ASSERT_TRUE(header->buffer_start() > 0);
+  for (auto check : checks) {
+    check(header);
+  }
 }
+
+header_checks check_buffered_count(int count) {
+  return [&count](const Header *h) { ASSERT_EQ(h->buffered_count(), count); };
+}
+
 TEST(TestPersistentSL, TestNewList) {
   remove("/tmp/psl");
   PersistentSkipList<Token> psl("/tmp/psl");
-  check_headers("/tmp/psl");
+  check_headers("/tmp/psl", {});
   for (int i = 0; i < 100; i++) {
     psl += Token(std::to_string(i), {"hello" + std::to_string(i)});
   }
+  check_headers("/tmp/psl", {check_buffered_count(100)});
+  psl.refresh();
   for (int i = 0; i < 100; i++) {
     auto docs = psl[std::to_string(i)];
     ASSERT_EQ(docs.size(), 1);

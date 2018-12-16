@@ -1,8 +1,29 @@
 cc_library(
+    name = "persistent_matrix",
+    srcs = ["persistent_matrix.cpp"],
+    hdrs = ["persistent_matrix.h"],
+    deps = [
+        "@eigen",
+        "@mio",
+    ],
+)
+
+cc_library(
     name = "sl",
     srcs = ["sl.cpp"],
     hdrs = ["sl.h"],
     deps = [
+    ],
+)
+
+cc_library(
+    name = "pslv2",
+    srcs = ["pslv2.cpp"],
+    hdrs = ["pslv2.h"],
+    deps = [
+        ":sl",
+        "//flatb:persistent_sl_gen_fbs",
+        "//flatb:sl_descriptor",
     ],
 )
 

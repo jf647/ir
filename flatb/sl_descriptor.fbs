@@ -1,0 +1,7 @@
+namespace nvrdb;
+table IndexDescriptor{
+    name:string;
+    version:int;
+    index:string;
+    current_buffer:string;
+}

@@ -3,8 +3,20 @@ cc_library(
     srcs = ["persistent_matrix.cpp"],
     hdrs = ["persistent_matrix.h"],
     deps = [
+        "//flatb:matrix_descriptor",
         "@eigen",
         "@mio",
+    ],
+)
+
+cc_test(
+    name = "persistent_matrix_test",
+    srcs = ["persistent_matrix_test.cpp"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        ":persistent_matrix",
+        "@backward//:stacker",
+        "@gtest//:gtest_main",
     ],
 )
 

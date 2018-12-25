@@ -1,0 +1,12 @@
+include "sl_descriptor.fbs";
+namespace nvrdb;
+
+enum Order : byte{ ROW = 0, COL }
+
+table MatrixHeader{
+    descriptor:IndexDescriptor;
+    order:Order = ROW;
+    primarySize:int;
+    secondarySize:int;
+    buffered:int;
+}

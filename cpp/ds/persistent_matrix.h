@@ -35,6 +35,7 @@ public:
   static PersistentMatrixBase create(std::string name, std::string path,
                                      int primarySize, order o);
   double *data();
+  void clean();
   int secondarySize();
   int primarySize();
   int write(std::vector<double> vec);
@@ -42,12 +43,8 @@ public:
 
 template <typename MatrixType>
 struct PersistentMatrix : public PersistentMatrixBase {
-  enum {
-    IsRowMajor =
-        (MatrixType::XprType::Flags & Eigen::RowMajorBit) == Eigen::RowMajorBit
-  };
   PersistentMatrix(std::string path);
-  Eigen::Map<MatrixType> get();
+  const Eigen::Map<MatrixType> *get();
   void operator+=(std::vector<double> rhs);
 };
 
@@ -63,10 +60,17 @@ PersistentMatrix<MatrixType> create_matrix(std::string name, std::string path,
 template <>
 struct PersistentMatrix<Eigen::MatrixXd> : public PersistentMatrixBase {
   enum { IsRowMajor = false };
+  Eigen::Map<Eigen::MatrixXd> *md;
 
-  PersistentMatrix(std::string path) : PersistentMatrixBase(path) {}
-  Eigen::Map<Eigen::MatrixXd> get() {
-    return Eigen::Map<Eigen::MatrixXd>(data(), primarySize(), secondarySize());
+  PersistentMatrix(std::string path) : PersistentMatrixBase(path) {
+    md =
+        new Eigen::Map<Eigen::MatrixXd>(data(), primarySize(), secondarySize());
+  }
+  const Eigen::Map<Eigen::MatrixXd> *get() {
+    new (md)
+        Eigen::Map<Eigen::MatrixXd>(data(), primarySize(), secondarySize());
+    clean();
+    return md;
   }
   void operator+=(std::vector<double> rhs) { write(rhs); }
 };

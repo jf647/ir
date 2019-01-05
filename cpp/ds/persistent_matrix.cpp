@@ -2,6 +2,7 @@
 #include "persistent_matrix.h"
 #include <fstream>
 #include <mio/mmap.hpp>
+#include <mutex>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -21,24 +22,48 @@ static inline mio::ummap_sink load_mmaped_sink(std::string filename) {
 struct PersistentMatrixBase::Store {
   // mio::basic_mmap_source<double> source;
   double *source;
+  void *addr;
   size_t mapping_size;
+  void *old_addr;
+  size_t old_apping_size;
   Store(std::string index_data, size_t offset) {
     struct stat s;
     int status = stat(index_data.c_str(), &s);
     mapping_size = s.st_size;
     refresh(index_data, mapping_size);
   }
-  void refresh(std::string index_data, size_t msize) {
-    int fd = open(index_data.c_str(), O_RDONLY);
-    source = (double *)mmap(NULL, msize, PROT_READ, MAP_SHARED, fd, 0);
-    close(fd);
+  void clean() {
+    if (old_addr != nullptr)
+      munmap(old_addr, old_apping_size);
   }
-  ~Store() { munmap(source, mapping_size); }
+  void refresh(std::string index_data, size_t msize) {
+    // std::cout << "refresh" << std::endl;
+    // std::cout << mapping_size << std::endl;
+    // if (source == nullptr || mapping_size == 0) {
+    assert(old_addr == nullptr);
+    old_addr = addr;
+    old_apping_size = mapping_size;
+    int fd = open(index_data.c_str(), O_RDONLY);
+    addr = mmap(NULL, msize, PROT_READ, MAP_SHARED, fd, 0);
+    source = (double *)addr;
+    close(fd);
+    mapping_size = msize;
+    //} else {
+    //  addr = mremap(addr, mapping_size, msize, MREMAP_MAYMOVE);
+    //  source = (double *)addr;
+    //  mapping_size = msize;
+    //}
+  }
+  ~Store() {
+    clean();
+    munmap(source, mapping_size);
+  }
 };
 
 struct PersistentMatrixBase::Header {
   mio::ummap_sink h_sink;
   nvrdb::MatrixHeader *mh;
+  std::mutex mtx;
 
   Header(std::string index)
       : h_sink(load_mmaped_sink(index)),
@@ -53,9 +78,11 @@ struct PersistentMatrixBase::Header {
   int primarySize() const { return mh->primarySize(); }
   int secondarySize() const { return mh->secondarySize(); }
   int incrementSecondary() {
+    mtx.lock();
     mh->mutate_secondarySize(1 + mh->secondarySize());
     std::error_code error;
     h_sink.sync(error);
+    mtx.unlock();
     return mh->secondarySize();
   }
   int buffer() const { return mh->buffered(); }
@@ -104,18 +131,19 @@ double *PersistentMatrixBase::data() {
   store->refresh(data_path(path), header->offset());
   return store->source;
 }
+void PersistentMatrixBase::clean() { store->clean(); }
 
 int PersistentMatrixBase::write(std::vector<double> vec) {
   assert(header->primarySize() == vec.size());
-  size_t location = (header->secondarySize() + header->buffer()) *
-                    sizeof(double) * header->primarySize();
+  auto sec = header->incrementSecondary();
+  size_t location =
+      (sec + header->buffer()) * sizeof(double) * header->primarySize();
   std::ofstream bufwrite;
   bufwrite.open(data_path(path), std::ios::app);
   assert(bufwrite.tellp() == location);
   bufwrite.seekp(location);
   bufwrite.write(reinterpret_cast<char *>(vec.data()),
                  sizeof(double) * vec.size());
-  header->incrementSecondary();
   return location;
 }
 int PersistentMatrixBase::primarySize() { return header->primarySize(); }
@@ -127,9 +155,13 @@ PersistentMatrixBase PersistentMatrixBase::create(std::string name,
   if (!check_path(path)) {
     if (mkdir(path.c_str(), 0777) == -1)
       throw StoreException(path + " base does not exist");
-  } else {
-    throw StoreException(path + "already exists");
+    create_header(header_path(path), name, primarySize, o);
   }
-  create_header(header_path(path), name, primarySize, o);
-  return PersistentMatrixBase(path);
+  auto pmb = PersistentMatrixBase(path);
+  if (!(pmb.header->name() == name &&
+        pmb.header->primarySize() == primarySize &&
+        pmb.header->matrix_order() == o)) {
+    throw StoreException("Exists but parameters do not match");
+  }
+  return pmb;
 }

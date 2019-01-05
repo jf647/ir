@@ -13,8 +13,13 @@ cc_test(
     name = "persistent_matrix_test",
     srcs = ["persistent_matrix_test.cpp"],
     copts = ["-Iexternal/gtest/include"],
+    data = [
+        "//data/mnist:test.bin",
+        "//data/mnist:train.bin",
+    ],
     deps = [
         ":persistent_matrix",
+        "//cpp/ds/ann:mrpt",
         "@backward//:stacker",
         "@gtest//:gtest_main",
     ],

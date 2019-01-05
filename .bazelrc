@@ -1,1 +1,1 @@
-build --compilation_mode=dbg 
+build --compilation_mode=opt  
